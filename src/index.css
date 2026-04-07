@@ -6,53 +6,52 @@
 
 @layer base {
   :root {
-    --background: 220 15% 8%;
-    --foreground: 220 10% 92%;
-    --card: 220 15% 11%;
-    --card-foreground: 220 10% 92%;
-    --popover: 220 15% 11%;
-    --popover-foreground: 220 10% 92%;
-    --primary: 262 83% 65%;
+    --background: 0 0% 4%; /* Deep Obsidian #0A0A0A */
+    --foreground: 0 0% 100%; /* #FFFFFF */
+    --card: 0 0% 7%; /* Translucent Carbon #121212 */
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 215 100% 50%; /* Electric Neon Blue */
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 15% 16%;
-    --secondary-foreground: 220 10% 85%;
-    --muted: 220 12% 14%;
-    --muted-foreground: 220 10% 55%;
-    --accent: 262 60% 50%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 80%;
+    --muted: 0 0% 7%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 100% 50%; /* Vibrant Crimson Crimson */
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 55%;
+    --destructive: 0 100% 40%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 12% 18%;
-    --input: 220 12% 18%;
-    --ring: 262 83% 65%;
-    --radius: 0.625rem;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 215 100% 50%;
+    --radius: 0px; /* SHARP Brutalist edges */
 
-    /* RepoGraph custom tokens */
-    --graph-bg: 220 15% 6%;
-    --graph-grid: 220 12% 12%;
-    --node-bg: 220 15% 13%;
-    --node-border: 220 12% 22%;
-    --node-selected: 262 83% 65%;
-    --edge-import: 262 70% 60%;
-    --edge-html: 25 90% 55%;
-    --edge-css: 210 90% 55%;
-    --edge-default: 220 10% 40%;
-    --glow-primary: 262 83% 65%;
-    --surface-elevated: 220 15% 14%;
-    --surface-overlay: 220 15% 10%;
+    /* Custom tokens for Cyberpunk aesthetic */
+    --graph-bg: 0 0% 3%;
+    --graph-grid: 0 0% 8%;
+    --node-bg: 0 0% 7%;
+    --node-border: 0 0% 20%;
+    --node-selected: 215 100% 50%;
+    --edge-import: 215 100% 50%;
+    --edge-html: 16 90% 55%;
+    --edge-css: 195 80% 55%;
+    --edge-default: 0 0% 30%;
+    --glow-primary: 215 100% 50%;
+    --surface-elevated: 0 0% 8%;
+    --surface-overlay: 0 0% 6%;
     --amber-warn: 38 92% 50%;
     --amber-warn-foreground: 38 100% 10%;
     --success: 142 71% 45%;
 
-    /* Sidebar */
-    --sidebar-background: 220 15% 9%;
-    --sidebar-foreground: 220 10% 85%;
-    --sidebar-primary: 262 83% 65%;
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 215 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 14%;
-    --sidebar-accent-foreground: 220 10% 85%;
-    --sidebar-border: 220 12% 16%;
-    --sidebar-ring: 262 83% 65%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 215 100% 50%;
 
     /* Language colors */
     --lang-ts: 210 80% 55%;
@@ -69,197 +68,71 @@
     --lang-other: 220 10% 50%;
   }
 
-  .theme-light {
-    --background: 0 0% 97%;
-    --foreground: 220 15% 15%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 15% 15%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 15%;
-    --primary: 262 83% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 15% 93%;
-    --secondary-foreground: 220 15% 30%;
-    --muted: 220 10% 94%;
-    --muted-foreground: 220 10% 45%;
-    --accent: 262 60% 50%;
-    --accent-foreground: 0 0% 100%;
-    --border: 220 12% 88%;
-    --input: 220 12% 88%;
-    --ring: 262 83% 58%;
-    --graph-bg: 220 10% 95%;
-    --graph-grid: 220 10% 88%;
-    --node-bg: 0 0% 100%;
-    --node-border: 220 12% 85%;
-    --surface-elevated: 0 0% 100%;
-    --surface-overlay: 220 10% 96%;
-    --sidebar-background: 0 0% 99%;
-    --sidebar-foreground: 220 15% 25%;
-    --sidebar-border: 220 12% 90%;
-    --sidebar-accent: 220 10% 95%;
-  }
-
-  .theme-neon {
-    --background: 0 0% 3%;
-    --foreground: 180 100% 80%;
-    --card: 0 0% 5%;
-    --card-foreground: 180 100% 80%;
-    --primary: 180 100% 50%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 8%;
-    --muted: 0 0% 8%;
-    --muted-foreground: 180 50% 40%;
-    --border: 180 100% 15%;
-    --ring: 180 100% 50%;
-    --graph-bg: 0 0% 2%;
-    --graph-grid: 180 100% 6%;
-    --node-bg: 0 0% 5%;
-    --node-border: 180 100% 20%;
-    --node-selected: 180 100% 50%;
-    --edge-import: 300 100% 60%;
-    --edge-html: 30 100% 60%;
-    --edge-css: 180 100% 50%;
-    --sidebar-background: 0 0% 3%;
-    --sidebar-border: 180 100% 10%;
-  }
-
-  .theme-blueprint {
-    --background: 215 50% 15%;
-    --foreground: 200 80% 85%;
-    --card: 215 50% 18%;
-    --card-foreground: 200 80% 85%;
-    --primary: 195 100% 60%;
-    --primary-foreground: 215 50% 10%;
-    --secondary: 215 40% 22%;
-    --muted: 215 40% 20%;
-    --muted-foreground: 200 40% 55%;
-    --border: 200 40% 28%;
-    --ring: 195 100% 60%;
-    --graph-bg: 215 50% 13%;
-    --graph-grid: 200 40% 22%;
-    --node-bg: 215 50% 18%;
-    --node-border: 200 50% 35%;
-    --node-selected: 195 100% 60%;
-    --sidebar-background: 215 50% 14%;
-    --sidebar-border: 200 40% 22%;
-  }
-
-  .theme-pastel {
-    --background: 40 30% 95%;
-    --foreground: 220 20% 25%;
-    --card: 40 30% 98%;
-    --card-foreground: 220 20% 25%;
-    --primary: 280 50% 65%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 40 25% 90%;
-    --muted: 40 20% 92%;
-    --muted-foreground: 220 15% 50%;
-    --border: 40 20% 85%;
-    --ring: 280 50% 65%;
-    --graph-bg: 40 30% 93%;
-    --graph-grid: 40 20% 87%;
-    --node-bg: 40 30% 98%;
-    --node-border: 40 20% 80%;
-    --sidebar-background: 40 30% 96%;
-    --sidebar-border: 40 20% 87%;
-  }
-
-  .theme-blood {
-    --background: 0 20% 5%;
-    --foreground: 0 10% 80%;
-    --card: 0 20% 8%;
-    --card-foreground: 0 10% 80%;
-    --primary: 0 80% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 15% 12%;
-    --muted: 0 15% 10%;
-    --muted-foreground: 0 10% 45%;
-    --border: 0 20% 18%;
-    --ring: 0 80% 50%;
-    --graph-bg: 0 20% 4%;
-    --graph-grid: 0 15% 10%;
-    --node-bg: 0 20% 8%;
-    --node-border: 0 25% 22%;
-    --node-selected: 0 80% 50%;
-    --edge-import: 0 80% 50%;
-    --sidebar-background: 0 20% 5%;
-    --sidebar-border: 0 20% 14%;
-  }
-
-  .theme-forest {
-    --background: 140 25% 7%;
-    --foreground: 120 15% 80%;
-    --card: 140 25% 10%;
-    --card-foreground: 120 15% 80%;
-    --primary: 140 60% 45%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 140 20% 14%;
-    --muted: 140 18% 12%;
-    --muted-foreground: 120 12% 45%;
-    --border: 140 20% 18%;
-    --ring: 140 60% 45%;
-    --graph-bg: 140 25% 5%;
-    --graph-grid: 140 18% 12%;
-    --node-bg: 140 25% 10%;
-    --node-border: 140 20% 22%;
-    --node-selected: 140 60% 45%;
-    --sidebar-background: 140 25% 7%;
-    --sidebar-border: 140 20% 14%;
-  }
-}
-
-@layer base {
   * {
     @apply border-border;
+    border-radius: 0 !important; /* Force sharp edges globally */
   }
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 400;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Syne', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
+    @apply font-black uppercase tracking-[0.2em];
   }
   code, pre, .font-mono {
     font-family: 'JetBrains Mono', monospace;
   }
+
+  /* Custom typography classes */
+  .brutalist-label {
+    @apply text-[9px] uppercase font-black tracking-[0.25em] text-muted-foreground/60;
+  }
+  
+  .brutalist-heading {
+    @apply text-[11px] uppercase font-black tracking-[0.2em] text-foreground;
+  }
 }
 
 @layer utilities {
-  .glow-primary {
-    box-shadow: 0 0 20px hsl(var(--glow-primary) / 0.3),
-                0 0 60px hsl(var(--glow-primary) / 0.1);
+  .glass-carbon {
+    @apply bg-black/80 border border-white/10 backdrop-blur-xl;
   }
-  .glow-primary-sm {
-    box-shadow: 0 0 10px hsl(var(--glow-primary) / 0.2);
+  
+  .glass-carbon-hover {
+    @apply hover:bg-black/90 hover:border-white/20 transition-all duration-300;
   }
+
+  .glow-cyan {
+    box-shadow: 0 0 15px hsl(215 100% 50% / 0.15),
+                0 0 45px hsl(215 100% 50% / 0.05);
+  }
+  
+  .glow-cyan-input:focus {
+    box-shadow: 0 0 20px hsl(215 100% 50% / 0.2);
+  }
+
+  .accent-crimson {
+    @apply text-[#FF0000];
+  }
+
   .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    background: linear-gradient(135deg, hsl(215 100% 50%), hsl(0 100% 50%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  .bg-graph {
-    background-color: hsl(var(--graph-bg));
-  }
-  .bg-surface-elevated {
-    background-color: hsl(var(--surface-elevated));
-  }
-  .bg-surface-overlay {
-    background-color: hsl(var(--surface-overlay));
-  }
+
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border)) transparent;
   }
   .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-  }
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
+    width: 2px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: hsl(var(--border));
-    border-radius: 3px;
   }
 }
 
@@ -332,7 +205,349 @@
   75% { transform: translate(10px, -10px) scale(1.1); opacity: 0.05; }
 }
 
-@keyframes scale-in {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+
+/* Theme Variants */
+.theme-light {
+  --background: 0 0% 98%;
+  --foreground: 0 0% 5%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 5%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 5%;
+  --primary: 215 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 92%;
+  --secondary-foreground: 0 0% 20%;
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 40%;
+  --accent: 0 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --border: 0 0% 85%;
+  --input: 0 0% 85%;
+  --ring: 215 100% 50%;
+  --graph-bg: 0 0% 96%;
+  --graph-grid: 0 0% 88%;
+  --node-bg: 0 0% 100%;
+  --node-border: 0 0% 80%;
+  --sidebar-background: 0 0% 95%;
+  --sidebar-foreground: 0 0% 10%;
+  --sidebar-border: 0 0% 90%;
+}
+
+.theme-neon {
+  --background: 280 40% 4%;
+  --foreground: 180 100% 95%;
+  --primary: 320 100% 60%; /* Neon Pink */
+  --primary-foreground: 0 0% 100%;
+  --accent: 180 100% 50%; /* Cyan */
+  --accent-foreground: 0 0% 100%;
+  --card: 280 40% 6%;
+  --card-foreground: 180 100% 95%;
+  --secondary: 280 40% 10%;
+  --secondary-foreground: 320 100% 60%;
+  --border: 280 40% 15%;
+  --input: 280 40% 15%;
+  --ring: 320 100% 60%;
+  --graph-bg: 280 40% 3%;
+  --graph-grid: 280 40% 8%;
+  --node-bg: 280 40% 7%;
+  --node-border: 280 40% 20%;
+}
+
+.theme-blueprint {
+  --background: 220 60% 15%;
+  --foreground: 220 40% 95%;
+  --primary: 220 100% 70%;
+  --primary-foreground: 220 100% 10%;
+  --accent: 30 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --card: 220 60% 18%;
+  --card-foreground: 220 40% 95%;
+  --secondary: 220 60% 22%;
+  --secondary-foreground: 220 100% 70%;
+  --border: 220 60% 25%;
+  --input: 220 60% 25%;
+  --ring: 220 100% 70%;
+  --graph-bg: 220 60% 12%;
+  --graph-grid: 220 60% 20%;
+  --node-bg: 220 60% 18%;
+  --node-border: 220 100% 70%;
+}
+
+.theme-pastel {
+  --background: 280 20% 98%;
+  --foreground: 280 40% 20%;
+  --primary: 320 60% 70%;
+  --primary-foreground: 280 40% 20%;
+  --accent: 180 50% 60%;
+  --accent-foreground: 0 0% 100%;
+  --card: 0 0% 100%;
+  --card-foreground: 280 40% 20%;
+  --secondary: 280 20% 94%;
+  --secondary-foreground: 320 60% 70%;
+  --border: 280 20% 90%;
+  --input: 280 20% 90%;
+  --ring: 320 60% 70%;
+  --graph-bg: 280 20% 97%;
+  --graph-grid: 280 20% 90%;
+  --node-bg: 0 0% 100%;
+  --node-border: 280 20% 85%;
+}
+
+.theme-blood {
+  --background: 0 100% 2%;
+  --foreground: 0 50% 90%;
+  --primary: 0 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 0 0% 100%;
+  --accent-foreground: 0 100% 2%;
+  --card: 0 100% 4%;
+  --card-foreground: 0 50% 90%;
+  --secondary: 0 100% 6%;
+  --secondary-foreground: 0 100% 50%;
+  --border: 0 100% 10%;
+  --input: 0 100% 10%;
+  --ring: 0 100% 50%;
+  --graph-bg: 0 100% 1%;
+  --graph-grid: 0 100% 5%;
+  --node-bg: 0 100% 4%;
+  --node-border: 0 100% 15%;
+}
+
+.theme-forest {
+  --background: 140 40% 4%;
+  --foreground: 140 20% 90%;
+  --primary: 142 71% 45%;
+  --primary-foreground: 140 40% 2%;
+  --accent: 45 100% 50%;
+  --accent-foreground: 140 40% 2%;
+  --card: 140 40% 6%;
+  --card-foreground: 140 20% 90%;
+  --secondary: 140 40% 10%;
+  --secondary-foreground: 142 71% 45%;
+  --border: 140 40% 15%;
+  --input: 140 40% 15%;
+  --ring: 142 71% 45%;
+  --graph-bg: 140 40% 3%;
+  --graph-grid: 140 40% 8%;
+  --node-bg: 140 40% 7%;
+  --node-border: 140 40% 12%;
+}
+
+.theme-sunset {
+  --background: 260 40% 6%;
+  --foreground: 20 100% 95%;
+  --primary: 20 100% 60%;
+  --primary-foreground: 260 40% 6%;
+  --accent: 280 100% 70%;
+  --accent-foreground: 0 0% 100%;
+  --card: 260 40% 8%;
+  --card-foreground: 20 100% 95%;
+  --secondary: 260 40% 15%;
+  --secondary-foreground: 20 100% 60%;
+  --border: 260 40% 20%;
+  --input: 260 40% 20%;
+  --ring: 20 100% 60%;
+  --graph-bg: 260 40% 4%;
+  --graph-grid: 260 40% 10%;
+  --node-bg: 260 40% 12%;
+  --node-border: 20 100% 60%;
+}
+
+.theme-electric {
+  --background: 0 0% 2%;
+  --foreground: 55 100% 95%;
+  --primary: 55 100% 55%;
+  --primary-foreground: 0 0% 0%;
+  --accent: 190 100% 50%;
+  --accent-foreground: 0 0% 0%;
+  --card: 0 0% 5%;
+  --card-foreground: 55 100% 95%;
+  --secondary: 0 0% 10%;
+  --secondary-foreground: 55 100% 55%;
+  --border: 0 0% 15%;
+  --input: 0 0% 15%;
+  --ring: 55 100% 55%;
+  --graph-bg: 0 0% 1%;
+  --graph-grid: 0 0% 10%;
+  --node-bg: 0 0% 8%;
+  --node-border: 55 100% 55%;
+}
+
+.theme-midnight {
+  --background: 220 50% 4%;
+  --foreground: 220 20% 95%;
+  --primary: 220 100% 70%;
+  --primary-foreground: 220 50% 4%;
+  --accent: 250 100% 80%;
+  --accent-foreground: 220 50% 4%;
+  --card: 220 50% 8%;
+  --card-foreground: 220 20% 95%;
+  --secondary: 220 50% 15%;
+  --secondary-foreground: 220 100% 70%;
+  --border: 220 50% 20%;
+  --input: 220 50% 20%;
+  --ring: 220 100% 70%;
+  --graph-bg: 220 50% 2%;
+  --graph-grid: 220 50% 10%;
+  --node-bg: 220 50% 12%;
+  --node-border: 220 100% 70%;
+}
+
+.theme-matrix {
+  --background: 120 100% 2%;
+  --foreground: 120 100% 80%;
+  --primary: 120 100% 50%;
+  --primary-foreground: 120 100% 5%;
+  --accent: 120 100% 40%;
+  --accent-foreground: 120 100% 95%;
+  --card: 120 100% 3%;
+  --card-foreground: 120 100% 80%;
+  --secondary: 120 100% 10%;
+  --secondary-foreground: 120 100% 50%;
+  --border: 120 100% 15%;
+  --input: 120 100% 15%;
+  --ring: 120 100% 50%;
+  --graph-bg: 120 100% 1%;
+  --graph-grid: 120 100% 8%;
+  --node-bg: 120 100% 5%;
+  --node-border: 120 100% 50%;
+}
+
+.theme-cyber {
+  --background: 260 100% 4%;
+  --foreground: 300 100% 95%;
+  --primary: 300 100% 55%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 200 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --card: 260 100% 8%;
+  --card-foreground: 300 100% 95%;
+  --secondary: 260 100% 15%;
+  --secondary-foreground: 300 100% 55%;
+  --border: 260 100% 20%;
+  --input: 260 100% 20%;
+  --ring: 300 100% 55%;
+  --graph-bg: 260 100% 2%;
+  --graph-grid: 260 100% 10%;
+  --node-bg: 260 100% 12%;
+  --node-border: 300 100% 55%;
+}
+
+.theme-drift {
+  --background: 0 0% 7%;
+  --foreground: 0 100% 95%;
+  --primary: 0 100% 55%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 210 10% 40%;
+  --accent-foreground: 0 0% 100%;
+  --card: 0 0% 10%;
+  --card-foreground: 0 100% 95%;
+  --secondary: 0 0% 15%;
+  --secondary-foreground: 0 100% 55%;
+  --border: 0 0% 20%;
+  --input: 0 0% 20%;
+  --ring: 0 100% 55%;
+  --graph-bg: 0 0% 5%;
+  --graph-grid: 0 0% 12%;
+  --node-bg: 0 0% 15%;
+  --node-border: 0 100% 55%;
+}
+
+.theme-arctic {
+  --background: 200 20% 98%;
+  --foreground: 200 100% 10%;
+  --primary: 200 100% 40%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 180 100% 40%;
+  --accent-foreground: 0 0% 100%;
+  --card: 0 0% 100%;
+  --card-foreground: 200 100% 10%;
+  --secondary: 200 20% 90%;
+  --secondary-foreground: 200 100% 40%;
+  --border: 200 20% 85%;
+  --input: 200 20% 85%;
+  --ring: 200 100% 40%;
+  --graph-bg: 200 10% 99%;
+  --graph-grid: 200 10% 85%;
+  --node-bg: 0 0% 100%;
+  --node-border: 200 100% 40%;
+}
+
+.theme-desert {
+  --background: 35 30% 96%;
+  --foreground: 35 100% 15%;
+  --primary: 35 100% 45%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 20 100% 40%;
+  --accent-foreground: 0 0% 100%;
+  --card: 35 30% 98%;
+  --card-foreground: 35 100% 15%;
+  --secondary: 35 30% 90%;
+  --secondary-foreground: 35 100% 45%;
+  --border: 35 30% 85%;
+  --input: 35 30% 85%;
+  --ring: 35 100% 45%;
+  --graph-bg: 35 30% 95%;
+  --graph-grid: 35 20% 85%;
+  --node-bg: 35 30% 100%;
+  --node-border: 35 100% 45%;
+}
+
+.theme-lava {
+  --background: 0 40% 4%;
+  --foreground: 15 100% 95%;
+  --primary: 15 100% 55%;
+  --primary-foreground: 0 0% 10%;
+  --accent: 0 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --card: 0 40% 7%;
+  --card-foreground: 15 100% 95%;
+  --secondary: 0 40% 12%;
+  --secondary-foreground: 15 100% 55%;
+  --border: 0 40% 18%;
+  --input: 0 40% 18%;
+  --ring: 15 100% 55%;
+  --graph-bg: 0 0% 2%;
+  --graph-grid: 0 40% 10%;
+  --node-bg: 0 40% 12%;
+  --node-border: 15 100% 55%;
+}
+
+.theme-void {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --primary: 0 0% 100%;
+  --primary-foreground: 0 0% 0%;
+  --accent: 0 0% 40%;
+  --accent-foreground: 0 0% 100%;
+  --card: 0 0% 4%;
+  --card-foreground: 0 0% 100%;
+  --secondary: 0 0% 10%;
+  --secondary-foreground: 0 0% 90%;
+  --border: 0 0% 20%;
+  --input: 0 0% 20%;
+  --ring: 0 0% 100%;
+  --graph-bg: 0 0% 0%;
+  --graph-grid: 0 0% 15%;
+  --node-bg: 0 0% 5%;
+  --node-border: 0 0% 100%;
+}
+@keyframes scanline {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite linear;
+}
+
+.animate-scanline {
+  animation: scanline 20s linear infinite;
 }

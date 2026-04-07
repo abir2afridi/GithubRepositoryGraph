@@ -3,45 +3,46 @@ export interface FileTypeInfo {
   color: string;
   language: string;
   colorVar: string;
+  iconUrl?: string;
 }
 
 const FILE_TYPES: Record<string, FileTypeInfo> = {
-  '.ts': { icon: 'TS', color: 'hsl(210, 80%, 55%)', language: 'TypeScript', colorVar: 'lang-ts' },
-  '.tsx': { icon: '⚛', color: 'hsl(195, 80%, 55%)', language: 'React TSX', colorVar: 'lang-ts' },
-  '.js': { icon: 'JS', color: 'hsl(48, 90%, 55%)', language: 'JavaScript', colorVar: 'lang-js' },
-  '.jsx': { icon: '⚛', color: 'hsl(195, 80%, 55%)', language: 'React JSX', colorVar: 'lang-js' },
-  '.mjs': { icon: 'JS', color: 'hsl(48, 90%, 55%)', language: 'JavaScript', colorVar: 'lang-js' },
-  '.cjs': { icon: 'JS', color: 'hsl(48, 90%, 55%)', language: 'JavaScript', colorVar: 'lang-js' },
-  '.html': { icon: '🌐', color: 'hsl(16, 90%, 55%)', language: 'HTML', colorVar: 'lang-html' },
-  '.htm': { icon: '🌐', color: 'hsl(16, 90%, 55%)', language: 'HTML', colorVar: 'lang-html' },
-  '.css': { icon: '🎨', color: 'hsl(210, 90%, 55%)', language: 'CSS', colorVar: 'lang-css' },
-  '.scss': { icon: '🎨', color: 'hsl(330, 70%, 55%)', language: 'SCSS', colorVar: 'lang-css' },
-  '.less': { icon: '🎨', color: 'hsl(210, 60%, 45%)', language: 'LESS', colorVar: 'lang-css' },
-  '.json': { icon: '{ }', color: 'hsl(220, 10%, 60%)', language: 'JSON', colorVar: 'lang-json' },
-  '.py': { icon: '🐍', color: 'hsl(120, 50%, 50%)', language: 'Python', colorVar: 'lang-py' },
-  '.php': { icon: 'PHP', color: 'hsl(260, 50%, 55%)', language: 'PHP', colorVar: 'lang-php' },
-  '.vue': { icon: 'V', color: 'hsl(153, 65%, 50%)', language: 'Vue', colorVar: 'lang-vue' },
-  '.svelte': { icon: 'S', color: 'hsl(16, 90%, 55%)', language: 'Svelte', colorVar: 'lang-svelte' },
-  '.md': { icon: '📄', color: 'hsl(220, 10%, 70%)', language: 'Markdown', colorVar: 'lang-md' },
-  '.mdx': { icon: '📄', color: 'hsl(220, 10%, 70%)', language: 'MDX', colorVar: 'lang-md' },
-  '.svg': { icon: '🖼', color: 'hsl(280, 60%, 55%)', language: 'SVG', colorVar: 'lang-image' },
-  '.png': { icon: '🖼', color: 'hsl(280, 60%, 55%)', language: 'PNG', colorVar: 'lang-image' },
-  '.jpg': { icon: '🖼', color: 'hsl(280, 60%, 55%)', language: 'JPEG', colorVar: 'lang-image' },
-  '.jpeg': { icon: '🖼', color: 'hsl(280, 60%, 55%)', language: 'JPEG', colorVar: 'lang-image' },
-  '.gif': { icon: '🖼', color: 'hsl(280, 60%, 55%)', language: 'GIF', colorVar: 'lang-image' },
-  '.webp': { icon: '🖼', color: 'hsl(280, 60%, 55%)', language: 'WebP', colorVar: 'lang-image' },
-  '.yaml': { icon: '⚙', color: 'hsl(220, 10%, 60%)', language: 'YAML', colorVar: 'lang-json' },
-  '.yml': { icon: '⚙', color: 'hsl(220, 10%, 60%)', language: 'YAML', colorVar: 'lang-json' },
-  '.toml': { icon: '⚙', color: 'hsl(220, 10%, 60%)', language: 'TOML', colorVar: 'lang-json' },
-  '.xml': { icon: '⚙', color: 'hsl(16, 60%, 50%)', language: 'XML', colorVar: 'lang-html' },
-  '.txt': { icon: '📝', color: 'hsl(220, 10%, 60%)', language: 'Text', colorVar: 'lang-other' },
-  '.env': { icon: '🔒', color: 'hsl(48, 60%, 50%)', language: 'Env', colorVar: 'lang-other' },
-  '.gitignore': { icon: '🚫', color: 'hsl(220, 10%, 50%)', language: 'Git', colorVar: 'lang-other' },
-  '.lock': { icon: '🔒', color: 'hsl(220, 10%, 50%)', language: 'Lock', colorVar: 'lang-other' },
+  '.ts': { icon: 'TS', color: 'hsl(210, 80%, 55%)', language: 'TypeScript', colorVar: 'lang-ts', iconUrl: 'https://img.icons8.com/color/48/typescript.png' },
+  '.tsx': { icon: 'JSX', color: 'hsl(195, 80%, 55%)', language: 'React TSX', colorVar: 'lang-ts', iconUrl: 'https://img.icons8.com/color/48/react-native.png' },
+  '.js': { icon: 'JS', color: 'hsl(48, 90%, 55%)', language: 'JavaScript', colorVar: 'lang-js', iconUrl: 'https://img.icons8.com/color/48/javascript--v1.png' },
+  '.jsx': { icon: 'JSX', color: 'hsl(195, 80%, 55%)', language: 'React JSX', colorVar: 'lang-js', iconUrl: 'https://img.icons8.com/color/48/react-native.png' },
+  '.mjs': { icon: 'JS', color: 'hsl(48, 90%, 55%)', language: 'JavaScript', colorVar: 'lang-js', iconUrl: 'https://img.icons8.com/color/48/javascript--v1.png' },
+  '.cjs': { icon: 'JS', color: 'hsl(48, 90%, 55%)', language: 'JavaScript', colorVar: 'lang-js', iconUrl: 'https://img.icons8.com/color/48/javascript--v1.png' },
+  '.html': { icon: 'HTM', color: 'hsl(16, 90%, 55%)', language: 'HTML', colorVar: 'lang-html', iconUrl: 'https://img.icons8.com/color/48/html-5--v1.png' },
+  '.htm': { icon: 'HTM', color: 'hsl(16, 90%, 55%)', language: 'HTML', colorVar: 'lang-html', iconUrl: 'https://img.icons8.com/color/48/html-5--v1.png' },
+  '.css': { icon: 'CSS', color: 'hsl(210, 90%, 55%)', language: 'CSS', colorVar: 'lang-css', iconUrl: 'https://img.icons8.com/color/48/css3.png' },
+  '.scss': { icon: 'CSS', color: 'hsl(330, 70%, 55%)', language: 'SCSS', colorVar: 'lang-css', iconUrl: 'https://img.icons8.com/color/48/sass.png' },
+  '.less': { icon: 'CSS', color: 'hsl(210, 60%, 45%)', language: 'LESS', colorVar: 'lang-css', iconUrl: 'https://img.icons8.com/color/48/css3.png' },
+  '.json': { icon: '{ }', color: 'hsl(220, 10%, 60%)', language: 'JSON', colorVar: 'lang-json', iconUrl: 'https://img.icons8.com/color/48/json.png' },
+  '.py': { icon: 'PY', color: 'hsl(120, 50%, 50%)', language: 'Python', colorVar: 'lang-py', iconUrl: 'https://img.icons8.com/color/48/python--v1.png' },
+  '.php': { icon: 'PHP', color: 'hsl(260, 50%, 55%)', language: 'PHP', colorVar: 'lang-php', iconUrl: 'https://img.icons8.com/officel/48/php-logo.png' },
+  '.vue': { icon: 'VUE', color: 'hsl(153, 65%, 50%)', language: 'Vue', colorVar: 'lang-vue', iconUrl: 'https://img.icons8.com/color/48/vue-js.png' },
+  '.svelte': { icon: 'SVT', color: 'hsl(16, 90%, 55%)', language: 'Svelte', colorVar: 'lang-svelte', iconUrl: 'https://img.icons8.com/color/48/code.png' },
+  '.md': { icon: 'MD', color: 'hsl(220, 10%, 70%)', language: 'Markdown', colorVar: 'lang-md', iconUrl: 'https://img.icons8.com/color/48/markdown.png' },
+  '.mdx': { icon: 'MD', color: 'hsl(220, 10%, 70%)', language: 'MDX', colorVar: 'lang-md', iconUrl: 'https://img.icons8.com/color/48/markdown.png' },
+  '.svg': { icon: 'IMG', color: 'hsl(280, 60%, 55%)', language: 'SVG', colorVar: 'lang-image', iconUrl: 'https://img.icons8.com/color/48/image-file.png' },
+  '.png': { icon: 'IMG', color: 'hsl(280, 60%, 55%)', language: 'PNG', colorVar: 'lang-image', iconUrl: 'https://img.icons8.com/color/48/image-file.png' },
+  '.jpg': { icon: 'IMG', color: 'hsl(280, 60%, 55%)', language: 'JPEG', colorVar: 'lang-image', iconUrl: 'https://img.icons8.com/color/48/image-file.png' },
+  '.jpeg': { icon: 'IMG', color: 'hsl(280, 60%, 55%)', language: 'JPEG', colorVar: 'lang-image', iconUrl: 'https://img.icons8.com/color/48/image-file.png' },
+  '.gif': { icon: 'IMG', color: 'hsl(280, 60%, 55%)', language: 'GIF', colorVar: 'lang-image', iconUrl: 'https://img.icons8.com/color/48/image-file.png' },
+  '.webp': { icon: 'IMG', color: 'hsl(280, 60%, 55%)', language: 'WebP', colorVar: 'lang-image', iconUrl: 'https://img.icons8.com/color/48/image-file.png' },
+  '.yaml': { icon: 'CFG', color: 'hsl(220, 10%, 60%)', language: 'YAML', colorVar: 'lang-json', iconUrl: 'https://img.icons8.com/color/48/settings.png' },
+  '.yml': { icon: 'CFG', color: 'hsl(220, 10%, 60%)', language: 'YAML', colorVar: 'lang-json', iconUrl: 'https://img.icons8.com/color/48/settings.png' },
+  '.toml': { icon: 'CFG', color: 'hsl(220, 10%, 60%)', language: 'TOML', colorVar: 'lang-json', iconUrl: 'https://img.icons8.com/color/48/settings.png' },
+  '.xml': { icon: 'XML', color: 'hsl(16, 60%, 50%)', language: 'XML', colorVar: 'lang-html', iconUrl: 'https://img.icons8.com/color/48/xml.png' },
+  '.txt': { icon: 'TXT', color: 'hsl(220, 10%, 60%)', language: 'Text', colorVar: 'lang-other', iconUrl: 'https://img.icons8.com/color/48/txt.png' },
+  '.env': { icon: 'ENV', color: 'hsl(48, 60%, 50%)', language: 'Env', colorVar: 'lang-other', iconUrl: 'https://img.icons8.com/color/48/database.png' },
+  '.gitignore': { icon: 'GIT', color: 'hsl(220, 10%, 50%)', language: 'Git', colorVar: 'lang-other', iconUrl: 'https://img.icons8.com/color/48/git.png' },
+  '.lock': { icon: 'LCK', color: 'hsl(220, 10%, 50%)', language: 'Lock', colorVar: 'lang-other', iconUrl: 'https://img.icons8.com/color/48/padlock.png' },
 };
 
 export function getFileTypeInfo(ext: string): FileTypeInfo {
-  return FILE_TYPES[ext.toLowerCase()] || { icon: '📄', color: 'hsl(220, 10%, 50%)', language: 'Other', colorVar: 'lang-other' };
+  return FILE_TYPES[ext.toLowerCase()] || { icon: 'DOC', color: 'hsl(220, 10%, 50%)', language: 'Other', colorVar: 'lang-other', iconUrl: 'https://img.icons8.com/color/48/file.png' };
 }
 
 export function getExtension(filename: string): string {

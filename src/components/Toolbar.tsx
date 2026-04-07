@@ -1,20 +1,30 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
+import { 
+  Search, 
+  Settings2, 
+  HelpCircle, 
+  LayoutDashboard, 
+  Share2, 
+  Monitor, 
+  RotateCcw,
+  Sidebar
+} from 'lucide-react';
 
 const TOOLS = [
-  { icon: '🔍', label: 'Search (Ctrl+F)', key: 'search' },
-  { icon: '📐', label: 'Layout & Shapes', key: 'customize' },
-  { icon: '❓', label: 'Guide', key: 'guide' },
-  { icon: '📊', label: 'Sidebar', key: 'sidebar' },
-  { icon: '📤', label: 'Export (Ctrl+E)', key: 'export' },
-  { icon: '🖥️', label: 'Present (P)', key: 'present' },
-  { icon: '🔄', label: 'Back to start', key: 'reset' },
+  { icon: Search, label: 'Search Index (Ctrl+K)', key: 'search' },
+  { icon: Settings2, label: 'Deck Configuration', key: 'customize' },
+  { icon: HelpCircle, label: 'Access Guide', key: 'guide' },
+  { icon: Sidebar, label: 'Toggle Intelligence', key: 'sidebar' },
+  { icon: Share2, label: 'Export Protocol (Ctrl+E)', key: 'export' },
+  { icon: Monitor, label: 'Presentation Mode (P)', key: 'present' },
+  { icon: RotateCcw, label: 'Initialize New Scan', key: 'reset' },
 ] as const;
 
 export function Toolbar() {
   const {
     toggleSidebar, toggleCustomization, toggleGuide, toggleExport, toggleSearch, togglePresentation,
-    sidebarOpen, setProject,
+    setProject,
   } = useStore();
 
   const actions: Record<string, () => void> = {
@@ -28,22 +38,38 @@ export function Toolbar() {
   };
 
   return (
-    <div
-      className="absolute left-0 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-0.5 bg-card/95 backdrop-blur-sm border border-border rounded-r-xl p-1 shadow-xl shadow-black/10"
-      style={{ marginLeft: sidebarOpen ? 320 : 0, transition: 'margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1)' }}
-    >
-      {TOOLS.map((item, i) => (
-        <button
-          key={i}
-          onClick={actions[item.key]}
-          title={item.label}
-          data-customize={item.key === 'customize' ? '' : undefined}
-          data-export={item.key === 'export' ? '' : undefined}
-          className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-secondary active:scale-90 transition-all text-sm"
-        >
-          {item.icon}
-        </button>
-      ))}
+    <div className="fixed bottom-8 inset-x-0 flex justify-center z-50 pointer-events-none">
+      <div className="pointer-events-auto flex items-center bg-card/60 backdrop-blur-2xl border border-white/5 p-1 rounded-sm shadow-[0_20px_50px_rgba(0,0,0,0.4)] relative overflow-hidden group/dock">
+        
+        {/* Precision Dock Background Glow */}
+        <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        
+        {TOOLS.map((item, i) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={i}
+              onClick={actions[item.key]}
+              title={item.label}
+              className="w-10 h-10 flex items-center justify-center hover:bg-primary/10 text-foreground/60 hover:text-primary transition-all duration-300 rounded-sm relative group"
+            >
+              <Icon className="w-4.5 h-4.5 relative z-10 transition-transform group-hover:scale-110" />
+              
+              {/* Internal Accent */}
+              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary/0 group-hover:bg-primary transition-all" />
+              
+              {/* Brutalist Tooltip */}
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap translate-y-2 group-hover:translate-y-0">
+                <div className="bg-popover/90 backdrop-blur-md border border-border px-3 py-1.5 rounded-xs shadow-xl">
+                  <span className="text-[10px] font-mono font-black text-foreground uppercase tracking-widest leading-none">
+                    {item.label}
+                  </span>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

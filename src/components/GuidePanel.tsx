@@ -6,11 +6,11 @@ export function GuidePanel() {
   if (!guideOpen) return null;
 
   return (
-    <div className="absolute bottom-4 left-4 w-[400px] max-h-[75vh] bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-2xl shadow-black/20 z-50 overflow-hidden"
-      style={{ marginLeft: sidebarOpen ? 320 : 0, transition: 'margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <h3 className="font-display font-bold text-sm tracking-tight">Guide & Legend</h3>
-        <button onClick={toggleGuide} className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all text-xs">✕</button>
+    <div className="absolute bottom-4 left-4 w-[400px] max-h-[75vh] bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 overflow-hidden"
+      style={{ animation: 'panel-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border/60 bg-secondary/10">
+        <h3 className="font-sans font-black text-xs tracking-[0.2em] uppercase text-foreground">Guide & Legend</h3>
+        <button onClick={toggleGuide} className="w-6 h-6 rounded-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all font-mono">✕</button>
       </div>
 
       <div className="p-4 overflow-y-auto scrollbar-thin max-h-[65vh] space-y-5 text-xs">

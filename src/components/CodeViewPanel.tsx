@@ -2,6 +2,22 @@ import React, { useMemo } from 'react';
 import Editor from '@monaco-editor/react';
 import { useStore } from '@/store/useStore';
 import { getFileTypeInfo } from '@/lib/fileIcons';
+import { computeComplexity, detectOrphans, extractCodeNotes, detectTestFiles, detectConfigFiles } from '@/lib/analysis';
+import { 
+  ArrowLeft, 
+  ArrowRight, 
+  X, 
+  BarChart, 
+  ChevronRight, 
+  Package, 
+  Box, 
+  Ruler,
+  ChevronDown,
+  Activity,
+  Ghost,
+  MessageSquareWarning,
+  Tag
+} from 'lucide-react';
 
 const LANG_MAP: Record<string, string> = {
   '.ts': 'typescript', '.tsx': 'typescript', '.js': 'javascript', '.jsx': 'javascript',
@@ -13,7 +29,7 @@ const LANG_MAP: Record<string, string> = {
 
 export function CodeViewPanel() {
   const { project, codeViewOpen, codeViewFile, closeCodeView, navigateCode,
-          codeHistory, codeHistoryIndex, openCodeView } = useStore();
+          codeHistory, codeHistoryIndex, openCodeView, theme } = useStore();
 
   const file = useMemo(() => {
     if (!codeViewOpen || !codeViewFile || !project) return null;
@@ -24,6 +40,33 @@ export function CodeViewPanel() {
   const incoming = useMemo(() => project?.dependencies.filter(d => d.target === codeViewFile && d.resolved) ?? [], [project, codeViewFile]);
 
   const [showImports, setShowImports] = React.useState(true);
+  const [showNotes, setShowNotes] = React.useState(true);
+
+  // Advanced file metrics
+  const complexityLevel = useMemo(() => {
+    if (!file || file.isBinary) return null;
+    const res = computeComplexity([file]);
+    return res.length > 0 ? res[0] : null;
+  }, [file]);
+
+  const isOrphan = useMemo(() => {
+    if (!project || !file) return false;
+    return detectOrphans([file], project.dependencies, project.entryPoints).includes(file.path);
+  }, [project, file]);
+
+  const codeNotes = useMemo(() => {
+    if (!file || file.isBinary) return [];
+    return extractCodeNotes([file]);
+  }, [file]);
+
+  const fileArchetype = useMemo(() => {
+    if (!file) return 'UNKNOWN';
+    if (file.isBinary) return 'BINARY PAYLOAD';
+    if (detectTestFiles([file]).length > 0) return 'TEST SUITE';
+    if (detectConfigFiles([file]).length > 0) return 'CONFIGURATION';
+    if (project?.entryPoints.includes(file.path)) return 'ENTRY POINT';
+    return 'SOURCE MODULE';
+  }, [file, project]);
 
   // Chain from root to this file
   const chainPath = useMemo(() => {
@@ -31,7 +74,6 @@ export function CodeViewPanel() {
     const order = project.fileOrder.get(codeViewFile);
     if (!order) return [];
 
-    // BFS backwards to find path from entry to this file
     const parentMap = new Map<string, string>();
     const visited = new Set<string>();
     const entries = project.entryPoints;
@@ -71,129 +113,241 @@ export function CodeViewPanel() {
   };
 
   return (
-    <div className="h-full bg-card border-l border-border flex flex-col" style={{ width: 520 }}>
+    <div className="h-full bg-card border-l border-border flex flex-col pointer-events-auto" style={{ width: 560 }}>
       {/* Top bar */}
-      <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border bg-surface-elevated flex-shrink-0">
+      <div className="flex items-center gap-1.5 px-4 py-4 border-b border-border bg-card/80 backdrop-blur-sm flex-shrink-0">
         <button onClick={() => navigateCode('back')} disabled={codeHistoryIndex <= 0}
-          className="p-1.5 rounded-md hover:bg-secondary disabled:opacity-20 text-xs transition-all active:scale-90">←</button>
+          className="p-1.5 rounded-md hover:bg-secondary disabled:opacity-20 transition-all active:scale-95 text-foreground">
+          <ArrowLeft className="w-5 h-5" />
+        </button>
         <button onClick={() => navigateCode('forward')} disabled={codeHistoryIndex >= codeHistory.length - 1}
-          className="p-1.5 rounded-md hover:bg-secondary disabled:opacity-20 text-xs transition-all active:scale-90">→</button>
+          className="p-1.5 rounded-md hover:bg-secondary disabled:opacity-20 transition-all active:scale-95 text-foreground">
+          <ArrowRight className="w-5 h-5" />
+        </button>
         
-        <div className="flex-1 min-w-0 mx-1">
-          <div className="flex items-center gap-0.5 text-xs font-mono truncate text-muted-foreground/60">
+        <div className="flex-1 min-w-0 mx-3">
+          <div className="flex items-center gap-0.5 text-sm font-mono truncate text-foreground/70 tracking-tight">
             {codeViewFile!.split('/').map((part, i, arr) => (
               <React.Fragment key={i}>
-                {i > 0 && <span className="text-border/60 mx-0.5">/</span>}
-                <span className={i === arr.length - 1 ? 'text-foreground font-medium' : 'hover:text-foreground/80 cursor-default'}>{part}</span>
+                {i > 0 && <span className="text-border mx-1.5 opacity-50">/</span>}
+                <span className={i === arr.length - 1 ? 'text-primary font-black text-base' : 'hover:text-foreground cursor-default transition-colors'}>{part}</span>
               </React.Fragment>
             ))}
           </div>
         </div>
 
-        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium flex-shrink-0"
-          style={{ backgroundColor: info.color + '15', color: info.color }}>{info.language}</span>
-        <button onClick={closeCodeView} className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-all active:scale-90 ml-1">✕</button>
+        <span className="px-2.5 py-1 rounded text-xs font-black font-mono flex-shrink-0 flex items-center gap-1.5 border"
+          style={{ borderColor: `hsl(var(--${info.colorVar}) / 0.5)`, color: `hsl(var(--${info.colorVar}))` }}>
+          {info.iconUrl && <img src={info.iconUrl} alt={info.language} className="w-3.5 h-3.5 object-contain" />}
+          <span className="uppercase">{info.language}</span>
+        </span>
+        <button onClick={closeCodeView} className="p-1.5 rounded-md hover:bg-destructive hover:text-destructive-foreground text-foreground/60 transition-all active:scale-95 ml-2">
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* File info bar */}
-      <div className="flex items-center gap-3 px-3 py-1.5 border-b border-border/60 bg-secondary/20 text-xs flex-shrink-0 flex-wrap">
-        {fileOrder && <span className="text-primary font-mono font-bold">#{fileOrder}</span>}
-        <span className="font-medium text-foreground/80">{file.name}</span>
-        <span className="text-muted-foreground/40">•</span>
-        <span className="text-muted-foreground/50 font-mono">{formatSize(file.size)}</span>
-        <span className="text-muted-foreground/40">•</span>
-        <span className="text-muted-foreground/50 font-mono">{file.lineCount} lines</span>
-        <div className="flex-1" />
-        <span className="text-primary font-mono font-semibold">↓{outgoing.length}</span>
-        <span className="text-accent font-mono font-semibold">↑{incoming.length}</span>
-      </div>
-
-      {/* Chain position */}
-      {chainPath.length > 1 && (
-        <div className="px-3 py-1.5 border-b border-border/40 bg-secondary/10 flex items-center gap-1 overflow-x-auto scrollbar-thin flex-shrink-0">
-          <span className="text-[10px] text-muted-foreground/40 mr-1">📊</span>
-          {chainPath.map((p, i) => {
-            const order = project.fileOrder?.get(p);
-            const name = p.split('/').pop();
-            return (
-              <React.Fragment key={i}>
-                {i > 0 && <span className="text-[10px] text-muted-foreground/30 mx-0.5">→</span>}
-                <button onClick={() => openCodeView(p)}
-                  className={`text-[10px] font-mono px-1 py-0.5 rounded hover:bg-secondary/50 transition-colors flex-shrink-0 ${p === codeViewFile ? 'text-primary font-semibold bg-primary/10' : 'text-muted-foreground/60'}`}>
-                  {order && <span className="text-[9px] mr-0.5">#{order}</span>}{name}
-                </button>
-              </React.Fragment>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Import details (collapsible) */}
-      {(outgoing.length > 0 || incoming.length > 0) && (
-        <div className="border-b border-border/60 flex-shrink-0">
-          <button onClick={() => setShowImports(!showImports)}
-            className="w-full text-left px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-muted-foreground/50 bg-secondary/15 font-semibold flex items-center gap-2 hover:text-muted-foreground transition-colors">
-            <span className={`transition-transform ${showImports ? 'rotate-90' : ''}`}>▶</span>
-            Import Details
-          </button>
-          {showImports && (
-            <div className="max-h-44 overflow-y-auto scrollbar-thin">
-              {outgoing.length > 0 && (
-                <div>
-                  <div className="px-3 py-1 text-[10px] text-muted-foreground/40 bg-secondary/10">↓ {outgoing.length} imports</div>
-                  {outgoing.map((dep, i) => (
-                    <button key={i} onClick={() => { if (dep.resolved) openCodeView(dep.target); }}
-                      className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-secondary/30 border-b border-border/20 transition-colors ${!dep.resolved ? 'opacity-40' : 'cursor-pointer'}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dep.resolved ? 'bg-primary' : dep.isExternal ? 'bg-warn' : 'bg-destructive'}`} />
-                      <span className="font-mono truncate flex-1 text-foreground/80">{dep.target.split('/').pop() || dep.target}</span>
-                      <span className="text-[10px] text-muted-foreground/40 font-mono">L{dep.line}</span>
-                      {dep.resolved && <span className="text-[10px] text-primary font-medium">→</span>}
-                      {dep.isExternal && <span className="text-[10px]">📦</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {incoming.length > 0 && (
-                <div>
-                  <div className="px-3 py-1 text-[10px] text-muted-foreground/40 bg-secondary/10">↑ Used by {incoming.length} files</div>
-                  {incoming.map((dep, i) => (
-                    <button key={i} onClick={() => openCodeView(dep.source)}
-                      className="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-secondary/30 border-b border-border/20 transition-colors cursor-pointer">
-                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-accent" />
-                      <span className="font-mono truncate flex-1 text-foreground/80">{dep.source.split('/').pop()}</span>
-                      <span className="text-[10px] text-muted-foreground/40 font-mono">L{dep.line}</span>
-                      <span className="text-[10px] text-accent font-medium">→</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+      {/* File info bar + Extended Metrics */}
+      <div className="flex flex-col border-b border-border bg-secondary/10 flex-shrink-0">
+         <div className="flex items-center gap-4 px-4 py-3 text-xs font-black uppercase tracking-wider flex-wrap text-foreground border-b border-border/40">
+           {fileOrder && <span className="text-primary bg-primary/10 px-2 py-0.5 border border-primary/20 rounded-sm">ORDER::{fileOrder}</span>}
+           <span className="text-foreground/90">{file.name}</span>
+           <span className="text-foreground/40">•</span>
+           <span className="text-foreground/80 font-mono">{formatSize(file.size)}</span>
+           <span className="text-foreground/40">•</span>
+           <span className="text-foreground/80 font-mono">{file.lineCount} LINES</span>
+           <div className="flex-1" />
+           <div className="flex items-center gap-2 bg-background px-3 py-1.5 border border-border/60 rounded flex-shrink-0 shadow-sm text-xs font-mono">
+             <span className="text-foreground/60">ARCHETYPE:</span>
+             <span className={`px-1 rounded ${
+               fileArchetype === 'TEST SUITE' ? 'bg-success/20 text-success' : 
+               fileArchetype === 'CONFIGURATION' ? 'bg-warn/20 text-warn' : 
+               fileArchetype === 'ENTRY POINT' ? 'bg-accent/20 text-accent' : 
+               'text-primary font-black'
+             }`}>{fileArchetype}</span>
+           </div>
+         </div>
+         
+         <div className="flex items-center gap-5 px-4 py-3 bg-background/40 border-b border-border/40">
+            {complexityLevel && (
+               <div className="flex items-center gap-2" title="Code Complexity Score">
+                  <Activity className={`w-4 h-4 ${complexityLevel.level === 'Critical' ? 'text-destructive' : complexityLevel.level === 'High' ? 'text-warn' : 'text-primary'}`} />
+                  <span className={`text-xs font-mono font-black uppercase tracking-wider ${complexityLevel.level === 'Critical' ? 'text-destructive' : 'text-foreground/80'}`}>
+                     CX::{complexityLevel.score} <span className="opacity-60 font-semibold ml-1">[{complexityLevel.level}]</span>
+                  </span>
+               </div>
+            )}
+            {isOrphan && (
+               <div className="flex items-center gap-2 bg-warn/10 border border-warn/20 px-2 py-1 rounded-sm" title="This file is actively present but unlinked in the dependency graph">
+                  <Ghost className="w-4 h-4 text-warn" />
+                  <span className="text-xs font-mono font-black uppercase tracking-wider text-warn">Orphan_State</span>
+               </div>
+            )}
+            <div className="flex-1" />
+            <div className="flex items-center gap-4">
+              <span className="text-primary font-mono text-sm font-black">↓ {outgoing.length} OUT</span>
+              <span className="text-accent font-mono text-sm font-black">↑ {incoming.length} IN</span>
             </div>
-          )}
-        </div>
-      )}
+         </div>
+      </div>
+
+      <div className="flex-shrink-0 overflow-y-auto max-h-[50vh] scrollbar-thin flex flex-col">
+        {/* Chain position */}
+        {chainPath.length > 1 && (
+          <div className="px-4 py-3 border-b border-border/40 bg-secondary/5 flex items-center gap-1.5 overflow-x-auto scrollbar-thin flex-shrink-0">
+            <BarChart className="w-4 h-4 text-foreground/40 mr-1 rotate-90 flex-shrink-0" />
+            {chainPath.map((p, i) => {
+              const order = project.fileOrder?.get(p);
+              const name = p.split('/').pop();
+              return (
+                <React.Fragment key={i}>
+                  {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-foreground/30 mx-0.5 flex-shrink-0" />}
+                  <button onClick={() => openCodeView(p)}
+                    className={`text-xs font-black font-mono px-2 py-1.5 rounded-sm border transition-all flex-shrink-0 shadow-sm ${
+                      p === codeViewFile 
+                        ? 'text-primary border-primary/50 bg-primary/10' 
+                        : 'text-foreground/70 border-transparent hover:border-border hover:bg-secondary hover:text-foreground'
+                    }`}>
+                    {order && <span className="text-[10px] mr-1.5 opacity-50">#{order}</span>}{name}
+                  </button>
+                </React.Fragment>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Code Notes (TODOs, FIXMEs) */}
+        {codeNotes.length > 0 && (
+          <div className="border-b border-border flex-shrink-0">
+            <button onClick={() => setShowNotes(!showNotes)}
+              className="w-full text-left px-5 py-3 text-xs uppercase tracking-wider text-foreground bg-warn/10 font-black flex items-center gap-2 hover:bg-warn/20 transition-colors">
+              {showNotes ? <ChevronDown className="w-4 h-4 text-warn" /> : <ChevronRight className="w-4 h-4 text-warn" />}
+              <MessageSquareWarning className="w-4 h-4 text-warn" />
+              Source Analysis Notes ({codeNotes.length})
+            </button>
+            <div className={`overflow-hidden transition-all duration-300 ${showNotes ? 'max-h-[250px] opacity-100' : 'max-h-0 opacity-0'}`}>
+              <div className="overflow-y-auto max-h-[250px] scrollbar-thin bg-background/50 divide-y divide-border/20">
+                {codeNotes.map((note, i) => (
+                  <div key={i} className="px-6 py-3 hover:bg-secondary/10 transition-colors">
+                    <div className="flex items-center gap-3 mb-1.5">
+                      <span className={`px-2 py-0.5 rounded text-xs font-black font-mono tracking-wider ${
+                        note.type === 'TODO' ? 'bg-primary/20 text-primary border border-primary/30' :
+                        note.type === 'FIXME' ? 'bg-destructive/20 text-destructive border border-destructive/30' :
+                        note.type === 'HACK' ? 'bg-warn/20 text-warn border border-warn/30' :
+                        'bg-foreground/10 text-foreground/80'
+                      }`}>{note.type}</span>
+                      <span className="text-xs font-mono text-foreground/50 ml-auto font-semibold">L::{note.line}</span>
+                    </div>
+                    <code className="text-sm text-foreground/90 font-mono block pl-3 border-l-2 border-border/40 whitespace-pre-wrap break-all leading-relaxed">{note.text}</code>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Import details (collapsible) */}
+        {(outgoing.length > 0 || incoming.length > 0) && (
+          <div className="border-b border-border flex-shrink-0">
+            <button onClick={() => setShowImports(!showImports)}
+              className="w-full text-left px-5 py-3 text-xs uppercase tracking-wider text-foreground bg-secondary/30 font-black flex items-center gap-2 hover:bg-secondary/50 transition-colors">
+              {showImports ? <ChevronDown className="w-4 h-4 text-primary" /> : <ChevronRight className="w-4 h-4" />}
+              <Tag className="w-4 h-4 text-primary" />
+              I/O Protocol Details
+            </button>
+            
+            <div className={`overflow-hidden transition-all duration-300 ${showImports ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`} style={{ contentVisibility: showImports ? 'visible' : 'hidden' }}>
+              <div className="overflow-y-auto max-h-[500px] scrollbar-thin bg-background/50">
+                {outgoing.length > 0 && (
+                  <div className="mb-2">
+                    <div className="px-5 py-2 text-[11px] font-black uppercase text-foreground/60 bg-secondary/10 tracking-widest border-y border-border/20 sticky top-0 z-10 shadow-sm backdrop-blur-md">↓ {outgoing.length} External Imports (What this file uses)</div>
+                    <div className="divide-y divide-border/10">
+                      {outgoing.map((dep, i) => (
+                        <div key={i} className="px-5 py-3 hover:bg-secondary/10 transition-colors">
+                          <div className="flex justify-between items-start mb-1.5">
+                            <button onClick={() => { if (dep.resolved) openCodeView(dep.target); }}
+                              className={`flex items-center gap-2.5 hover:text-primary transition-colors text-left ${!dep.resolved ? 'opacity-40' : 'cursor-pointer text-foreground font-semibold'}`}>
+                              <div className={`w-1.5 h-4 rounded-full flex-shrink-0 ${dep.resolved ? 'bg-primary shadow-[0_0_5px_rgba(var(--primary),0.5)]' : dep.isExternal ? 'bg-warn' : 'bg-destructive'}`} />
+                              <span className="truncate flex-1 tracking-tight text-sm font-mono">{dep.isExternal ? dep.target : dep.target.split('/').pop()}</span>
+                              <span title="NPM Package">{dep.isExternal && <Package className="w-4 h-4 text-warn" />}</span>
+                            </button>
+                            <span className="text-xs text-foreground/60 px-2 py-0.5 bg-background border border-border/40 rounded uppercase tracking-wider whitespace-nowrap font-semibold">{dep.type} • L{dep.line}</span>
+                          </div>
+                          {dep.raw && (
+                            <div className="pl-4 mt-2 border-l-2 border-primary/20 ml-1.5">
+                              <span className="text-[10px] text-primary/70 uppercase font-black block mb-1 tracking-widest">Import Statement:</span>
+                              <div className="text-xs text-foreground/80 bg-background/80 border border-border/30 px-3 py-2 rounded font-mono whitespace-pre-wrap break-all inline-block max-w-full leading-relaxed">
+                                {dep.raw}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {incoming.length > 0 && (
+                  <div>
+                    <div className="px-5 py-2 text-[11px] font-black uppercase text-foreground/60 bg-secondary/10 tracking-widest border-y border-border/20 sticky top-0 z-10 shadow-sm backdrop-blur-md">↑ {incoming.length} Consumers (Who uses this file)</div>
+                    <div className="divide-y divide-border/10">
+                      {incoming.map((dep, i) => (
+                        <div key={i} className="px-5 py-3 hover:bg-secondary/10 transition-colors">
+                          <div className="flex justify-between items-start mb-1.5">
+                            <button onClick={() => openCodeView(dep.source)}
+                              className="flex items-center gap-2.5 hover:text-primary transition-colors cursor-pointer text-foreground font-semibold text-left">
+                              <div className="w-1.5 h-4 rounded-full flex-shrink-0 bg-accent shadow-[0_0_5px_rgba(var(--accent),0.5)]" />
+                              <span className="truncate flex-1 tracking-tight text-sm font-mono">{dep.source.split('/').pop()}</span>
+                              <ChevronRight className="w-4 h-4 ml-1 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                            </button>
+                            <span className="text-xs text-foreground/60 px-2 py-0.5 bg-background border border-border/40 rounded uppercase tracking-wider whitespace-nowrap font-semibold">CONSUMER • L{dep.line}</span>
+                          </div>
+                          {dep.raw && (
+                            <div className="pl-4 mt-2 border-l-2 border-accent/30 ml-1.5">
+                              <span className="text-[10px] text-accent/70 uppercase font-black block mb-1 tracking-widest">How they import this:</span>
+                              <div className="text-xs text-foreground/80 bg-background/80 border border-border/30 px-3 py-2 rounded font-mono whitespace-pre-wrap break-all inline-block max-w-full leading-relaxed">
+                                {dep.raw}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Editor */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden bg-background">
         {file.isBinary ? (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground/50 gap-2">
-            <span className="text-2xl">📦</span>
-            <span className="text-sm font-medium">Binary file — no preview available</span>
-            <span className="text-[11px] text-muted-foreground/30 font-mono">{file.name} • {formatSize(file.size)} • {file.extension}</span>
+          <div className="flex flex-col items-center justify-center h-full text-foreground/60 gap-4">
+            <Box className="w-16 h-16 text-primary opacity-30 drop-shadow-[0_0_15px_rgba(var(--primary),0.2)]" />
+            <div className="text-center">
+                <span className="text-sm font-black uppercase tracking-[0.2em] block text-foreground">Payload::Binary</span>
+                <span className="text-xs opacity-60 font-mono mt-1 block">{file.name} • {formatSize(file.size)}</span>
+            </div>
           </div>
         ) : file.size > 1000000 ? (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground/50 gap-2">
-            <span className="text-2xl">📏</span>
-            <span className="text-sm font-medium">File too large to preview ({formatSize(file.size)})</span>
+          <div className="flex flex-col items-center justify-center h-full text-foreground/60 gap-4">
+            <Ruler className="w-16 h-16 text-destructive opacity-30 drop-shadow-[0_0_15px_rgba(var(--destructive),0.2)]" />
+            <div className="text-center">
+                <span className="text-sm font-black uppercase tracking-[0.2em] block text-destructive">Buffer::Overflow</span>
+                <span className="text-xs opacity-60 font-mono mt-1 block text-foreground">Stream exceeds 1MB limitation ({formatSize(file.size)})</span>
+            </div>
           </div>
         ) : (
           <Editor
-            height="100%" language={monacoLang} value={file.content} theme="vs-dark"
+            height="100%" language={monacoLang} value={file.content} theme={theme === 'light' || theme === 'pastel' ? 'vs' : 'vs-dark'}
             options={{
-              readOnly: true, minimap: { enabled: false }, fontSize: 13,
-              fontFamily: 'JetBrains Mono, monospace', lineNumbers: 'on',
-              scrollBeyondLastLine: false, wordWrap: 'on', padding: { top: 12, bottom: 12 },
+              readOnly: true, minimap: { enabled: false }, fontSize: 14,
+              fontFamily: 'JetBrains Mono, "Fira Code", monospace', lineNumbers: 'on',
+              scrollBeyondLastLine: false, wordWrap: 'on', padding: { top: 16, bottom: 16 },
               renderLineHighlight: 'none', overviewRulerBorder: false,
               lineDecorationsWidth: 24, folding: true, smoothScrolling: true,
+              glyphMargin: true,
+              cursorBlinking: 'smooth',
             }}
             onMount={(editor) => {
               const decorations = outgoing.map(dep => ({

@@ -3,6 +3,16 @@ import { useStore } from '@/store/useStore';
 import { toPng, toSvg } from 'html-to-image';
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
+import { 
+  X, 
+  Image as ImageIcon, 
+  Maximize, 
+  FileText, 
+  FileJson, 
+  FileType, 
+  Loader2,
+  Download
+} from 'lucide-react';
 
 export function ExportModal() {
   const { exportOpen, toggleExport, project } = useStore();
@@ -70,50 +80,66 @@ export function ExportModal() {
         }
       }
       toast.success('Export complete — downloading...');
-    } catch (e: any) {
-      toast.error('Export failed: ' + e.message);
+    } catch (e) {
+      toast.error('Export failed: ' + (e as Error).message);
     } finally {
       setExporting(null);
       toggleExport();
     }
   };
 
+  const options = [
+    { format: 'png', icon: ImageIcon, label: 'PNG Image', desc: 'High-res transparent manifest' },
+    { format: 'svg', icon: Maximize, label: 'SVG Vector', desc: 'Scalable structural schematic' },
+    { format: 'pdf', icon: FileText, label: 'PDF Document', desc: 'Compressed archival format' },
+    { format: 'json', icon: FileJson, label: 'JSON Data', desc: 'Raw nodal connectivity graph' },
+    { format: 'markdown', icon: FileType, label: 'Markdown Report', desc: 'Auto-generated protocol docs' },
+  ];
+
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center" onClick={toggleExport}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4" onClick={toggleExport}>
       <div
-        className="bg-card border border-border rounded-2xl shadow-2xl shadow-black/20 w-[380px] p-6 space-y-4"
+        className="bg-card border-2 border-white/10 rounded-2xl shadow-3xl w-[420px] overflow-hidden"
         onClick={e => e.stopPropagation()}
-        style={{ animation: 'scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)' }}
+        style={{ animation: 'scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1)' }}
       >
-        <div className="flex items-center justify-between">
-          <h2 className="font-display font-bold text-lg tracking-tight">Export</h2>
-          <button onClick={toggleExport} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all">✕</button>
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 bg-white/[0.03] border-b border-white/5">
+          <div className="flex flex-col -space-y-1">
+            <h2 className="font-display font-black text-xs uppercase tracking-[0.3em] text-primary">Protocol::Export</h2>
+            <span className="text-[10px] text-muted-foreground/40 font-mono tracking-widest uppercase">Select Output Vector</span>
+          </div>
+          <button onClick={toggleExport} 
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-white hover:bg-white/5 transition-all">
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        <div className="space-y-1.5">
-          {[
-            { format: 'png', icon: '🖼', label: 'PNG Image', desc: '2x resolution, transparent bg' },
-            { format: 'svg', icon: '📐', label: 'SVG Vector', desc: 'Scalable, perfect for docs' },
-            { format: 'pdf', icon: '📄', label: 'PDF Document', desc: 'Graph snapshot' },
-            { format: 'json', icon: '{ }', label: 'JSON Data', desc: 'Raw graph data, re-importable' },
-            { format: 'markdown', icon: '📝', label: 'Markdown Report', desc: 'Auto-generated documentation' },
-          ].map(opt => (
+        {/* Options */}
+        <div className="p-4 space-y-2">
+          {options.map(opt => (
             <button
               key={opt.format}
               onClick={() => handleExport(opt.format)}
               disabled={!!exporting}
-              className="w-full text-left px-4 py-3 rounded-xl bg-secondary/40 hover:bg-secondary/70 active:scale-[0.99] transition-all flex items-center gap-3 disabled:opacity-40"
+              className={`w-full group text-left px-5 py-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.08] hover:border-white/10 active:scale-[0.98] transition-all flex items-center gap-4 disabled:opacity-30`}
             >
-              <span className="text-lg w-7 text-center">{exporting === opt.format ? '⏳' : opt.icon}</span>
-              <div>
-                <div className="text-sm font-medium text-foreground/90">{opt.label}</div>
-                <div className="text-[10px] text-muted-foreground/50">{opt.desc}</div>
+              <div className={`w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center transition-transform group-hover:scale-110 ${exporting === opt.format ? 'animate-spin' : ''}`}>
+                {exporting === opt.format ? <Loader2 className="w-5 h-5 text-primary" /> : <opt.icon className="w-5 h-5 opacity-40 group-hover:opacity-100 transition-opacity" />}
               </div>
+              <div className="flex-1">
+                <div className="text-[11px] font-black uppercase tracking-widest text-foreground/90">{opt.label}</div>
+                <div className="text-[10px] text-muted-foreground/50 font-mono italic">{opt.desc}</div>
+              </div>
+              <Download className="w-4 h-4 opacity-0 group-hover:opacity-20 transition-opacity" />
             </button>
           ))}
         </div>
 
-        <p className="text-[10px] text-muted-foreground/30 text-center">Ctrl+E to toggle</p>
+        {/* Footer */}
+        <div className="px-6 py-4 bg-black/40 border-t border-white/5 flex justify-center">
+            <span className="text-[9px] uppercase font-black tracking-[0.4em] text-muted-foreground/20">Protocol Authorization Level: Clear</span>
+        </div>
       </div>
     </div>
   );

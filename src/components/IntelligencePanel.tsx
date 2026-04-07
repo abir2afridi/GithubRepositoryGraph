@@ -2,21 +2,65 @@ import React, { useMemo, useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { getFileTypeInfo } from '@/lib/fileIcons';
 import { detectCircularDeps } from '@/lib/projectLoader';
-import { extractCodeNotes, computeComplexity, detectOrphans, detectTestFiles, detectConfigFiles, detectCIPipelines, extractEnvKeys } from '@/lib/analysis';
+import { computeComplexity, detectOrphans, detectTestFiles, detectConfigFiles } from '@/lib/analysis';
+import { 
+  FolderOpen, 
+  Folder, 
+  Zap, 
+  Beaker, 
+  Settings, 
+  Ghost, 
+  Plus, 
+  Minus,
+  Layers,
+  Activity,
+  FileText,
+  Cpu,
+  BarChart3,
+  Network,
+  ShieldCheck,
+  AlertTriangle,
+  History,
+  ChevronRight,
+  ChevronDown,
+  Package
+} from 'lucide-react';
+
+interface TreeNode {
+  name: string;
+  path: string;
+  children: TreeNode[];
+  file?: {
+    path: string;
+    name: string;
+    extension: string;
+    size: number;
+    lineCount: number;
+    isBinary: boolean;
+    isEntryPoint?: boolean;
+    content?: string;
+  }; 
+}
 
 export function IntelligencePanel() {
-  const { project, sidebarOpen, openCodeView, setSelectedNode, toggleRepoInfo } = useStore();
-  const [sortBy, setSortBy] = useState<'name' | 'size' | 'connections'>('name');
-  const [fileFilter, setFileFilter] = useState('');
-  const [activeSection, setActiveSection] = useState<string | null>('overview');
+  const { project, sidebarOpen, openCodeView, setSelectedNode } = useStore();
+  const [activeSection, setActiveSection] = useState<string | null>('tree');
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['src']));
 
+  // Basic Stats
   const textFiles = useMemo(() => project?.files.filter(f => !f.isBinary) ?? [], [project]);
   const totalSize = useMemo(() => project?.files.reduce((a, f) => a + f.size, 0) ?? 0, [project]);
   const totalLines = useMemo(() => textFiles.reduce((a, f) => a + f.lineCount, 0), [textFiles]);
   const unresolvedDeps = useMemo(() => project?.dependencies.filter(d => !d.resolved && !d.isExternal) ?? [], [project]);
-  const externalDeps = useMemo(() => project?.dependencies.filter(d => d.isExternal) ?? [], [project]);
+  
+  // Advanced Analysis
+  const complexityReport = useMemo(() => project ? computeComplexity(project.files).slice(0, 8) : [], [project]);
+  const orphanFiles = useMemo(() => project ? detectOrphans(project.files, project.dependencies, project.entryPoints) : [], [project]);
+  const testFiles = useMemo(() => project ? detectTestFiles(project.files) : [], [project]);
+  const configFiles = useMemo(() => project ? detectConfigFiles(project.files) : [], [project]);
+  const circularDeps = useMemo(() => project ? detectCircularDeps(project.dependencies).slice(0, 5) : [], [project]);
 
+  // Network stats
   const connectionCounts = useMemo(() => {
     const counts = new Map<string, number>();
     project?.dependencies.forEach(d => {
@@ -25,67 +69,48 @@ export function IntelligencePanel() {
     });
     return counts;
   }, [project]);
+  const topConnected = useMemo(() => [...connectionCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5), [connectionCounts]);
 
-  const importCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    project?.dependencies.filter(d => d.resolved && !d.isExternal).forEach(d => {
-      counts.set(d.target, (counts.get(d.target) || 0) + 1);
+  const externalDeps = useMemo(() => {
+    const deps = new Map<string, number>();
+    project?.dependencies.filter(d => d.isExternal).forEach(d => {
+      deps.set(d.target, (deps.get(d.target) || 0) + 1);
     });
-    return counts;
+    return [...deps.entries()].sort((a,b)=>b[1]-a[1]);
   }, [project]);
 
+  // Language Breakdown
+  const totalTextSize = useMemo(() => textFiles.reduce((a, f) => a + f.size, 0), [textFiles]);
   const langBreakdown = useMemo(() => {
-    const counts = new Map<string, { count: number; size: number; lines: number; ext: string }>();
+    const counts = new Map<string, { count: number; size: number; color: string; language: string }>();
     textFiles.forEach(f => {
       const info = getFileTypeInfo(f.extension);
       const key = info.language;
-      const prev = counts.get(key) || { count: 0, size: 0, lines: 0, ext: f.extension };
-      counts.set(key, { count: prev.count + 1, size: prev.size + f.size, lines: prev.lines + f.lineCount, ext: prev.ext });
+      const prev = counts.get(key) || { count: 0, size: 0, color: info.color, language: info.language };
+      counts.set(key, { ...prev, count: prev.count + 1, size: prev.size + f.size });
     });
-    return [...counts.entries()].sort((a, b) => b[1].size - a[1].size);
+    return [...counts.values()].sort((a, b) => b.size - a.size);
   }, [textFiles]);
 
-  const extStats = useMemo(() => {
-    const counts = new Map<string, { count: number; size: number }>();
-    project?.files.forEach(f => {
-      const ext = f.extension || '(none)';
-      const prev = counts.get(ext) || { count: 0, size: 0 };
-      counts.set(ext, { count: prev.count + 1, size: prev.size + f.size });
-    });
-    return [...counts.entries()].sort((a, b) => b[1].count - a[1].count);
-  }, [project]);
+  // Risk Score calculation (Mocked but based on data)
+  const riskScore = useMemo(() => {
+    if (!project) return 0;
+    let score = 0;
+    score += circularDeps.length * 15;
+    score += orphanFiles.length * 2;
+    score += unresolvedDeps.length * 5;
+    return Math.min(100, Math.max(5, score));
+  }, [project, circularDeps, orphanFiles, unresolvedDeps]);
 
-  const topConnected = useMemo(() => {
-    return [...connectionCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
-  }, [connectionCounts]);
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
 
-  const circularDeps = useMemo(() => {
-    if (!project) return [];
-    return detectCircularDeps(project.dependencies).slice(0, 5);
-  }, [project]);
-
-  // New analysis data
-  const codeNotes = useMemo(() => project ? extractCodeNotes(project.files) : [], [project]);
-  const complexityReport = useMemo(() => project ? computeComplexity(project.files).slice(0, 10) : [], [project]);
-  const orphanFiles = useMemo(() => project ? detectOrphans(project.files, project.dependencies, project.entryPoints) : [], [project]);
-  const testFiles = useMemo(() => project ? detectTestFiles(project.files) : [], [project]);
-  const configFiles = useMemo(() => project ? detectConfigFiles(project.files) : [], [project]);
-  const ciPipelines = useMemo(() => project ? detectCIPipelines(project.files) : [], [project]);
-  const envKeys = useMemo(() => project ? extractEnvKeys(project.files) : [], [project]);
-
-  const sortedFiles = useMemo(() => {
-    let files = textFiles.filter(f => !fileFilter || f.path.toLowerCase().includes(fileFilter.toLowerCase()));
-    switch (sortBy) {
-      case 'size': return files.sort((a, b) => b.size - a.size);
-      case 'connections': return files.sort((a, b) => (connectionCounts.get(b.path) || 0) - (connectionCounts.get(a.path) || 0));
-      default: return files.sort((a, b) => a.path.localeCompare(b.path));
-    }
-  }, [textFiles, fileFilter, sortBy, connectionCounts]);
-
-  // Folder tree
+  // Folder tree logic...
   const folderTree = useMemo(() => {
     if (!project) return null;
-    interface TreeNode { name: string; path: string; children: TreeNode[]; file?: typeof project.files[0] }
     const root: TreeNode = { name: '', path: '', children: [] };
     project.files.forEach(f => {
       const parts = f.path.split('/');
@@ -113,31 +138,7 @@ export function IntelligencePanel() {
     return root;
   }, [project]);
 
-  const externalPackages = useMemo(() => {
-    if (!project?.packageJson) return { deps: [] as [string, string][], devDeps: [] as [string, string][], usageCount: new Map<string, number>() };
-    const usageCount = new Map<string, number>();
-    externalDeps.forEach(d => {
-      const pkg = d.target.split('/')[0];
-      usageCount.set(pkg, (usageCount.get(pkg) || 0) + 1);
-    });
-    const deps = Object.entries(project.packageJson.dependencies || {}) as [string, string][];
-    const devDeps = Object.entries(project.packageJson.devDependencies || {}) as [string, string][];
-    return { deps, devDeps, usageCount };
-  }, [project, externalDeps]);
-
   if (!project || !sidebarOpen) return null;
-
-  const formatSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  };
-
-  const totalTextSize = textFiles.reduce((a, f) => a + f.size, 0);
-  const meta = project.repoMeta;
-  const folderCount = new Set(project.files.map(f => f.path.substring(0, f.path.lastIndexOf('/'))).filter(Boolean)).size;
-
-  const toggle = (id: string) => setActiveSection(activeSection === id ? null : id);
 
   const toggleFolder = (path: string) => {
     setExpandedFolders(prev => {
@@ -148,441 +149,297 @@ export function IntelligencePanel() {
     });
   };
 
-  const renderTree = (node: { name: string; path: string; children: any[]; file?: any }, depth = 0) => {
+  const renderTree = (node: TreeNode, depth = 0) => {
     if (node.file) {
       const info = getFileTypeInfo(node.file.extension);
-      const order = project.fileOrder?.get(node.file.path);
       const isOrphan = orphanFiles.includes(node.file.path);
-      const isTest = testFiles.includes(node.file.path);
-      const isConfig = configFiles.includes(node.file.path);
       return (
         <button key={node.path} onClick={() => setSelectedNode(node.path)} onDoubleClick={() => openCodeView(node.path)}
-          className="w-full text-left flex items-center gap-1.5 py-0.5 px-1 rounded hover:bg-secondary/40 transition-colors text-[11px]"
-          style={{ paddingLeft: depth * 14 + 4 }}>
-          <span style={{ color: info.color }} className="text-[10px] w-4 text-center flex-shrink-0">{info.icon}</span>
-          <span className={`truncate flex-1 ${isOrphan ? 'text-muted-foreground/40' : 'text-foreground/80'}`}>{node.name}</span>
-          {order && <span className="text-[9px] text-muted-foreground/40 font-mono">#{order}</span>}
-          {node.file.isEntryPoint && <span className="text-[9px]">⚡</span>}
-          {isTest && <span className="text-[9px]">🧪</span>}
-          {isConfig && <span className="text-[9px]">⚙️</span>}
-          {isOrphan && <span className="text-[9px]">⚫</span>}
+          className="w-full text-left flex items-center gap-2 py-2 px-1 hover:bg-white/10 transition-colors text-sm"
+          style={{ paddingLeft: depth * 16 + 12 }}>
+          <span className="w-5 h-5 flex items-center justify-center flex-shrink-0" style={info.iconUrl ? {} : { color: info.color }}>
+            {info.iconUrl ? <img src={info.iconUrl} alt="" className="w-4 h-4 object-contain" /> : <span className="text-xs font-black opacity-90">{info.icon}</span>}
+          </span>
+          <span className={`truncate flex-1 tracking-tight ${isOrphan ? 'text-muted-foreground/70 italic' : 'text-foreground font-medium'}`}>{node.name}</span>
+          <div className="flex items-center gap-1.5 text-muted-foreground/70">
+            {node.file.isEntryPoint && <Zap className="w-3.5 h-3.5 text-primary" />}
+            {testFiles.includes(node.file.path) && <Beaker className="w-3.5 h-3.5 text-primary" />}
+            {configFiles.includes(node.file.path) && <Settings className="w-3.5 h-3.5" />}
+            {isOrphan && <Ghost className="w-3.5 h-3.5" />}
+          </div>
         </button>
       );
     }
     const isExpanded = expandedFolders.has(node.path);
-    const fileCount = countFilesRecursive(node);
     return (
       <div key={node.path}>
         <button onClick={() => toggleFolder(node.path)}
-          className="w-full text-left flex items-center gap-1.5 py-0.5 px-1 rounded hover:bg-secondary/40 transition-colors text-[11px] font-medium"
-          style={{ paddingLeft: depth * 14 + 4 }}>
-          <span className="text-[10px] w-4 text-center flex-shrink-0">{isExpanded ? '📂' : '📁'}</span>
+          className="w-full text-left flex items-center gap-2 py-1.5 px-1 hover:bg-white/5 transition-colors text-[13px] font-bold"
+          style={{ paddingLeft: depth * 14 + 8 }}>
+          {isExpanded ? <FolderOpen className="w-3.5 h-3.5 text-primary/60" /> : <Folder className="w-3.5 h-3.5 text-muted-foreground/30" />}
           <span className="truncate flex-1 text-foreground/80">{node.name}</span>
-          <span className="text-[9px] text-muted-foreground/30 font-mono">{fileCount}</span>
         </button>
-        {isExpanded && node.children.map((child: any) => renderTree(child, depth + 1))}
+        {isExpanded && node.children.map((child: TreeNode) => renderTree(child, depth + 1))}
       </div>
     );
   };
 
-  const countFilesRecursive = (node: any): number => {
-    return node.children.reduce((sum: number, child: any) => {
-      if (child.file) return sum + 1;
-      return sum + countFilesRecursive(child);
-    }, 0);
+  const Section = ({ id, title, badge, icon: Icon, children }: { id: string; title: string; badge?: string | number; icon: React.ElementType; children: React.ReactNode }) => {
+    const isOpen = activeSection === id;
+    return (
+      <div className="border-b border-border/80">
+        <button onClick={() => setActiveSection(isOpen ? null : id)}
+          className={`w-full px-6 py-5 flex items-center justify-between group transition-all ${isOpen ? 'bg-primary/5' : 'hover:bg-secondary/10'}`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-2 h-2 rounded-full transition-all ${isOpen ? 'bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]' : 'bg-border/40'}`} />
+            <Icon className={`w-4 h-4 ${isOpen ? 'text-primary' : 'text-primary/40'}`} />
+            <span className={`text-xs font-black uppercase tracking-[0.2em] transition-colors ${isOpen ? 'text-primary' : 'text-foreground/60'}`}>
+              {title}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            {badge !== undefined && (
+              <span className="text-[11px] font-mono font-black text-primary/40">[{badge}]</span>
+            )}
+            <div className={`transition-transform duration-300 ${isOpen ? 'rotate-180 text-primary' : 'text-muted-foreground/30'}`}>
+               <Plus className="w-3.5 h-3.5" />
+            </div>
+          </div>
+        </button>
+        <div 
+          className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[1500px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}
+          style={{ contentVisibility: isOpen ? 'visible' : 'hidden' }}
+        >
+          <div className="px-6 pb-6 pt-3 bg-card/20 border-t border-border/40">{children}</div>
+        </div>
+      </div>
+    );
   };
 
-  const Section = ({ id, title, badge, children }: { id: string; title: string; badge?: string | number; children: React.ReactNode }) => (
-    <div className="border-b border-border/60 last:border-0">
-      <button onClick={() => toggle(id)}
-        className="w-full px-4 py-2.5 flex items-center justify-between text-[10px] font-display font-semibold uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground transition-colors">
-        <span className="flex items-center gap-2">
-          {title}
-          {badge !== undefined && <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded-full text-[9px] font-mono">{badge}</span>}
-        </span>
-        <span className={`text-[10px] transition-transform duration-200 ${activeSection === id ? 'rotate-90' : ''}`}>▶</span>
-      </button>
-      <div className={`overflow-hidden transition-all duration-300 ease-out ${activeSection === id ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="px-4 pb-3">{children}</div>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="h-full bg-card border-r border-border overflow-y-auto scrollbar-thin flex-shrink-0" style={{ width: 320 }} data-sidebar>
-      {/* Header */}
-      <div className="p-4 border-b border-border">
-        {meta ? (
-          <div className="flex items-center gap-3">
-            <img src={meta.ownerAvatar} alt={meta.owner} className="w-9 h-9 rounded-full ring-1 ring-border" />
-            <div className="min-w-0 flex-1">
-              <button onClick={toggleRepoInfo} className="font-display font-bold text-sm truncate tracking-tight text-foreground hover:text-primary transition-colors block">
-                {meta.repoName}
-              </button>
-              <a href={`https://github.com/${meta.owner}`} target="_blank" rel="noopener noreferrer"
-                className="text-[11px] text-muted-foreground/50 font-mono hover:text-primary transition-colors">{meta.owner}</a>
+    <div className="h-full bg-background border-r border-border/80 overflow-hidden flex flex-col flex-shrink-0 relative z-40 w-[360px]" style={{ transform: 'translateZ(0)' }}>
+      
+      {/* 01: SYSTEM DIAGNOSTICS HEADER */}
+      <div className="p-6 border-b border-border/80 bg-card/40 relative">
+        <div className="absolute top-0 right-0 p-3">
+            <div className="flex flex-col items-end gap-1">
+               <span className="text-[10px] font-mono font-black text-success uppercase tracking-widest">System_Healthy</span>
+               <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
             </div>
-          </div>
-        ) : (
-          <h2 className="font-display font-bold text-base truncate tracking-tight">{project.name}</h2>
-        )}
-        {project.description && <p className="text-[11px] text-muted-foreground/70 mt-2 line-clamp-2 leading-relaxed">{project.description}</p>}
-        <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
-          <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium">{project.source === 'github' ? '🐙 GitHub' : '📁 Local'}</span>
-          {project.branch && <span className="px-2 py-0.5 bg-secondary rounded text-[10px] text-muted-foreground">🔀 {project.branch}</span>}
-          {meta && <span className="px-2 py-0.5 bg-secondary rounded text-[10px] text-muted-foreground">⭐ {meta.stars}</span>}
-          {meta && <span className="px-2 py-0.5 bg-secondary rounded text-[10px] text-muted-foreground">🍴 {meta.forks}</span>}
         </div>
-        {meta && (
-          <button onClick={toggleRepoInfo} className="mt-2 text-[11px] text-primary hover:underline">View full repo info →</button>
-        )}
+
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[11px] font-mono font-black text-primary uppercase tracking-[0.3em]">Nodal_Intelligence</span>
+          <h2 className="text-2xl font-black uppercase tracking-tighter text-foreground truncate">
+            {project.name.split('/').pop()}
+          </h2>
+          <div className="flex items-center gap-2 mt-3">
+             <div className="px-2.5 py-1 bg-primary/10 border border-primary/30 rounded-sm">
+                <span className="text-[10px] font-black text-primary uppercase tracking-widest">{project.source}::PRO</span>
+             </div>
+             <div className="px-2.5 py-1 border border-border rounded-sm">
+                <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">{project.branch || 'main'}</span>
+             </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-3 gap-1.5 p-3 border-b border-border">
-        {[
-          { icon: '📁', label: 'Files', value: project.files.length },
-          { icon: '🔗', label: 'Deps', value: project.dependencies.length },
-          { icon: '⚡', label: 'Entry', value: project.entryPoints.length },
-          { icon: '⚠️', label: 'Unresolved', value: unresolvedDeps.length },
-          { icon: '📦', label: 'Packages', value: new Set(externalDeps.map(d => d.target.split('/')[0])).size },
-          { icon: '📂', label: 'Folders', value: folderCount },
-          { icon: '🔄', label: 'Circular', value: circularDeps.length },
-          { icon: '⚫', label: 'Orphans', value: orphanFiles.length },
-          { icon: '🧪', label: 'Tests', value: testFiles.length },
-        ].map((stat, i) => (
-          <div key={i} className={`bg-secondary/40 rounded-lg p-2 text-center hover:bg-secondary/60 transition-colors ${
-            (stat.label === 'Unresolved' || stat.label === 'Circular') && stat.value > 0 ? 'ring-1 ring-destructive/20' : ''
-          }`}>
-            <div className="text-[10px] mb-0.5">{stat.icon}</div>
-            <div className={`text-sm font-bold font-mono ${
-              (stat.label === 'Unresolved' || stat.label === 'Circular') && stat.value > 0 ? 'text-destructive' : 'text-foreground'
-            }`}>{stat.value}</div>
-            <div className="text-[10px] text-muted-foreground/60">{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
-      <Section id="overview" title="📊 Languages" badge={langBreakdown.length}>
-        <div className="space-y-2.5">
-          <div className="h-2.5 rounded-full overflow-hidden flex bg-secondary/30">
-            {langBreakdown.map(([, data], i) => {
-              const pct = (data.size / Math.max(1, totalTextSize)) * 100;
-              const info = getFileTypeInfo(data.ext);
-              return (
-                <div key={i} style={{ width: `${pct}%`, backgroundColor: info.color }}
-                  className="h-full first:rounded-l-full last:rounded-r-full transition-all duration-500"
-                  title={`${getFileTypeInfo(data.ext).language}: ${pct.toFixed(1)}%`} />
-              );
-            })}
-          </div>
-          {langBreakdown.map(([lang, data], i) => {
-            const info = getFileTypeInfo(data.ext);
-            const pct = (data.size / Math.max(1, totalTextSize)) * 100;
-            return (
-              <div key={i} className="flex items-center gap-2 text-xs">
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: info.color }} />
-                <span className="flex-1 truncate text-foreground/80">{lang}</span>
-                <span className="text-muted-foreground/60 font-mono text-[11px]">{data.count}</span>
-                <span className="text-muted-foreground/40 font-mono text-[11px]">{data.lines.toLocaleString()}L</span>
-                <span className="text-muted-foreground font-mono text-[11px] w-10 text-right font-medium">{pct.toFixed(0)}%</span>
+      {/* 02: LIVE TELEMETRY STREAM */}
+      <div className="flex-1 overflow-y-auto scrollbar-thin">
+        
+        {/* Architecture Assessment Section */}
+        <div className="p-6 border-b border-border/80 bg-secondary/5">
+           <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2.5">
+                 <ShieldCheck className="w-4 h-4 text-primary" />
+                 <span className="text-xs font-black uppercase tracking-widest text-foreground">Arch_Assessment</span>
               </div>
-            );
-          })}
-        </div>
-      </Section>
-
-      <Section id="filetypes" title="📄 File Types" badge={extStats.length}>
-        <div className="space-y-0.5">
-          {extStats.map(([ext, data], i) => {
-            const info = getFileTypeInfo(ext);
-            return (
-              <div key={i} className="flex items-center gap-2 text-xs py-1.5 px-1 rounded hover:bg-secondary/40 transition-colors">
-                <span className="text-[10px] w-5 text-center" style={{ color: info.color }}>{info.icon}</span>
-                <span className="font-mono flex-1 text-foreground/80">{ext || '(none)'}</span>
-                <span className="text-muted-foreground/60 font-mono">{data.count}</span>
-                <span className="text-muted-foreground font-mono w-14 text-right text-[11px]">{formatSize(data.size)}</span>
+              <span className={`text-[11px] font-mono font-black px-2.5 py-1 rounded-sm ${riskScore > 50 ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'}`}>
+                 CRIT_LEVEL::{(riskScore / 10).toFixed(1)}
+              </span>
+           </div>
+           
+           <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="p-3 border border-border/50 rounded-sm bg-card/40 flex flex-col gap-1">
+                 <span className="text-[9px] font-mono font-black text-muted-foreground/50 uppercase tracking-widest">Risk_Index</span>
+                 <div className="flex items-end gap-2">
+                    <span className={`text-lg leading-none font-black font-mono transition-colors ${riskScore > 50 ? 'text-destructive' : 'text-foreground'}`}>{riskScore}%</span>
+                 </div>
               </div>
-            );
-          })}
+              <div className="p-3 border border-border/50 rounded-sm bg-card/40 flex flex-col gap-1">
+                 <span className="text-[9px] font-mono font-black text-muted-foreground/50 uppercase tracking-widest">Compute_Mass</span>
+                 <div className="flex items-end gap-1.5">
+                    <span className="text-lg leading-none font-black font-mono text-foreground">{Math.round(totalLines / 1000)}k</span>
+                    <span className="text-[9px] text-muted-foreground font-mono font-black pb-0.5">LOC</span>
+                 </div>
+              </div>
+              <div className="p-3 border border-border/50 rounded-sm bg-card/40 flex flex-col gap-1">
+                 <span className="text-[9px] font-mono font-black text-muted-foreground/50 uppercase tracking-widest">Active_Nodes</span>
+                 <div className="flex items-end gap-1.5">
+                    <span className="text-lg leading-none font-black font-mono text-foreground">{project.files.length}</span>
+                    <span className="text-[9px] text-muted-foreground font-mono font-black pb-0.5">FILES</span>
+                 </div>
+              </div>
+              <div className="p-3 border border-border/50 rounded-sm bg-card/40 flex flex-col gap-1">
+                 <span className="text-[9px] font-mono font-black text-muted-foreground/50 uppercase tracking-widest">Vector_Edges</span>
+                 <div className="flex items-end gap-1.5">
+                    <span className="text-lg leading-none font-black font-mono text-foreground">{project.dependencies.length}</span>
+                    <span className="text-[9px] text-muted-foreground font-mono font-black pb-0.5">LINKS</span>
+                 </div>
+              </div>
+              
+               <div className="col-span-2 p-3 mt-1 border border-border/50 rounded-sm bg-card/40 flex flex-col gap-3">
+                 <span className="text-[9px] font-mono font-black text-muted-foreground/50 uppercase tracking-widest">Structural_Health_Monitors</span>
+                 <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-1" title="Orphan Files (No dependencies)">
+                       <div className="flex items-center gap-1.5">
+                          <Ghost className="w-3.5 h-3.5 text-muted-foreground/40" />
+                          <span className={`text-[11px] font-mono font-black ${orphanFiles.length > 0 ? 'text-warn' : 'text-success'}`}>{orphanFiles.length} Orphans</span>
+                       </div>
+                    </div>
+                    <div className="flex flex-col gap-1" title="Unresolved / Broken Imports">
+                       <div className="flex items-center gap-1.5">
+                          <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground/40" />
+                          <span className={`text-[11px] font-mono font-black ${unresolvedDeps.length > 0 ? 'text-destructive' : 'text-success'}`}>{unresolvedDeps.length} Dropped</span>
+                       </div>
+                    </div>
+                    <div className="flex flex-col gap-1" title="Circular Dependencies">
+                       <div className="flex items-center gap-1.5">
+                          <History className="w-3.5 h-3.5 text-muted-foreground/40" />
+                          <span className={`text-[11px] font-mono font-black ${circularDeps.length > 0 ? 'text-warn' : 'text-success'}`}>{circularDeps.length} Cycles</span>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+           </div>
         </div>
-      </Section>
 
-      <Section id="tree" title="🗂️ Folder Tree">
-        <div className="max-h-72 overflow-y-auto scrollbar-thin">
-          {folderTree && folderTree.children.map(child => renderTree(child, 0))}
-        </div>
-      </Section>
-
-      <Section id="files" title="📂 File Browser" badge={sortedFiles.length}>
-        <div className="space-y-2">
-          <input value={fileFilter} onChange={e => setFileFilter(e.target.value)}
-            placeholder="Filter files..." className="w-full px-2.5 py-1.5 text-xs bg-secondary/50 border border-border/60 rounded-lg font-mono placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring/30" />
-          <div className="flex gap-0.5 bg-secondary/30 rounded-lg p-0.5">
-            {(['name', 'size', 'connections'] as const).map(s => (
-              <button key={s} onClick={() => setSortBy(s)}
-                className={`flex-1 px-2 py-1 text-[10px] rounded-md font-medium transition-all ${sortBy === s ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-                {s}
-              </button>
-            ))}
+        {/* Dynamic Sections */}
+        <Section id="tree" title="File Manifest" badge={project.files.length} icon={Layers}>
+          <div className="max-h-[400px] overflow-y-auto scrollbar-thin p-1 border border-border/30 bg-secondary/10">
+            {folderTree && folderTree.children.map(child => renderTree(child, 0))}
           </div>
-          <div className="max-h-60 overflow-y-auto scrollbar-thin space-y-0.5">
-            {sortedFiles.map(f => {
-              const info = getFileTypeInfo(f.extension);
-              const order = project.fileOrder?.get(f.path);
-              const imports = project.dependencies.filter(d => d.source === f.path).length;
-              const usedBy = importCounts.get(f.path) || 0;
-              return (
-                <button key={f.path} onClick={() => setSelectedNode(f.path)} onDoubleClick={() => openCodeView(f.path)}
-                  className="w-full text-left px-2 py-1.5 rounded-md hover:bg-secondary/50 active:scale-[0.99] flex items-center gap-2 text-xs transition-all">
-                  <span style={{ color: info.color }} className="text-[10px] w-4 text-center">{info.icon}</span>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium text-foreground/90 flex items-center gap-1">
-                      {f.isEntryPoint && <span className="text-warn text-[10px]">⚡</span>}
-                      {f.name}
+        </Section>
+
+        <Section id="languages" title="Language Spectrum" badge={langBreakdown.length} icon={BarChart3}>
+           <div className="space-y-5">
+              <div className="h-2.5 bg-secondary/40 rounded-full overflow-hidden flex">
+                 {langBreakdown.map((data, i) => (
+                    <div key={i} style={{ width: `${(data.size / totalTextSize) * 100}%`, backgroundColor: data.color }} className="h-full" />
+                 ))}
+              </div>
+              <div className="space-y-2.5">
+                 {langBreakdown.map((data, i) => (
+                    <div key={i} className="flex items-center justify-between group">
+                       <div className="flex items-center gap-2.5">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: data.color }} />
+                          <span className="text-xs font-black uppercase text-foreground/80 group-hover:text-primary transition-colors">{data.language}</span>
+                       </div>
+                       <div className="flex items-center gap-4">
+                          <span className="text-[11px] font-mono text-muted-foreground/40">{data.count} units</span>
+                          <span className="text-[11px] font-black text-foreground">{Math.round((data.size / totalTextSize) * 100)}%</span>
+                       </div>
                     </div>
-                    <div className="truncate text-[10px] text-muted-foreground/50 flex items-center gap-2">
-                      <span>{f.path.substring(0, f.path.lastIndexOf('/'))}</span>
-                      {order && <span className="text-primary/60">#{order}</span>}
-                    </div>
-                  </div>
-                  <div className="text-[10px] text-muted-foreground/40 font-mono text-right flex-shrink-0">
-                    <div>↓{imports} ↑{usedBy}</div>
-                  </div>
+                 ))}
+              </div>
+           </div>
+        </Section>
+
+        <Section id="entry" title="Kernel Entries" badge={project.entryPoints.length} icon={Zap}>
+           <div className="space-y-1.5">
+              {project.entryPoints.map((ep, i) => (
+                <button key={i} onClick={() => { setSelectedNode(ep); openCodeView(ep); }}
+                  className="w-full flex items-center justify-between p-4 border border-border/40 hover:border-primary/40 bg-card hover:bg-secondary/10 transition-all group">
+                   <div className="flex items-center gap-4 truncate">
+                      <Zap className="w-3.5 h-3.5 text-primary animate-pulse" />
+                      <span className="text-[11px] font-mono font-black text-foreground truncate group-hover:text-primary">{ep.split('/').pop()}</span>
+                   </div>
+                   <ChevronRight className="w-4 h-4 text-border group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                 </button>
-              );
-            })}
-          </div>
-        </div>
-      </Section>
-
-      <Section id="entry" title="⚡ Entry Points" badge={project.entryPoints.length}>
-        <div className="space-y-1">
-          {project.entryPoints.map((ep, i) => (
-            <button key={i} onClick={() => { setSelectedNode(ep); openCodeView(ep); }}
-              className="w-full text-left px-2 py-1.5 rounded-md hover:bg-secondary/50 text-xs flex items-center gap-2 transition-colors">
-              <span className="text-warn text-[10px]">⚡</span>
-              <span className="font-mono truncate text-foreground/80">{ep}</span>
-              <span className="text-[9px] text-primary font-mono">#{project.fileOrder?.get(ep) || '?'}</span>
-            </button>
-          ))}
-          {project.entryPoints.length === 0 && <span className="text-xs text-muted-foreground/50 italic">None detected</span>}
-        </div>
-      </Section>
-
-      <Section id="deps" title="🔗 Dependencies" badge={topConnected.length}>
-        <div className="space-y-3">
-          <div>
-            <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground/50 mb-2 font-medium">Most Connected</h4>
-            {topConnected.map(([path, count], i) => (
-              <button key={i} onClick={() => setSelectedNode(path)}
-                className="w-full flex items-center gap-2 text-xs py-1.5 px-1 rounded hover:bg-secondary/40 transition-colors">
-                <span className="w-4 h-4 rounded bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
-                <span className="truncate flex-1 font-mono text-foreground/80">{path.split('/').pop()}</span>
-                <span className="text-muted-foreground/60 font-mono text-[11px]">{count}</span>
-              </button>
-            ))}
-          </div>
-
-          <div>
-            <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground/50 mb-2 font-medium">Most Imported</h4>
-            {[...importCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([path, count], i) => (
-              <button key={i} onClick={() => setSelectedNode(path)}
-                className="w-full flex items-center gap-2 text-xs py-1.5 px-1 rounded hover:bg-secondary/40 transition-colors">
-                <span className="w-4 h-4 rounded bg-accent/10 text-accent flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
-                <span className="truncate flex-1 font-mono text-foreground/80">{path.split('/').pop()}</span>
-                <span className="text-muted-foreground/60 font-mono text-[11px]">↑{count}</span>
-              </button>
-            ))}
-          </div>
-
-          {circularDeps.length > 0 && (
-            <div className="bg-destructive/[0.06] border border-destructive/20 rounded-lg p-2.5">
-              <h4 className="text-[10px] uppercase tracking-wider text-destructive font-semibold mb-1.5 flex items-center gap-1">⚠️ Circular Dependencies</h4>
-              {circularDeps.map((cycle, i) => (
-                <div key={i} className="text-[11px] font-mono text-destructive/80 truncate">{cycle.map(c => c.split('/').pop()).join(' → ')}</div>
               ))}
-            </div>
-          )}
-        </div>
-      </Section>
+           </div>
+        </Section>
 
-      {/* TODO/FIXME Notes */}
-      {codeNotes.length > 0 && (
-        <Section id="todos" title="📝 Code Notes" badge={codeNotes.length}>
-          <div className="space-y-0.5 max-h-48 overflow-y-auto scrollbar-thin">
-            {codeNotes.slice(0, 20).map((note, i) => (
-              <button key={i} onClick={() => openCodeView(note.file)}
-                className="w-full text-left px-2 py-1.5 rounded-md hover:bg-secondary/40 text-[11px] flex items-start gap-2 transition-colors">
-                <span className={`flex-shrink-0 font-bold ${
-                  note.type === 'FIXME' ? 'text-destructive' : note.type === 'HACK' ? 'text-warn' : 'text-primary'
-                }`}>{note.type === 'FIXME' ? '🔴' : note.type === 'HACK' ? '⚠️' : '📝'}</span>
-                <div className="min-w-0 flex-1">
-                  <div className="font-mono text-foreground/70 truncate">{note.text}</div>
-                  <div className="text-[10px] text-muted-foreground/40">{note.file.split('/').pop()}:{note.line}</div>
+        <Section id="network" title="Network Topology" badge={topConnected.length} icon={Network}>
+           <div className="space-y-5">
+              <div className="p-4 border border-border/40 bg-card/60">
+                 <span className="text-[10px] font-mono font-black text-primary/60 uppercase block mb-4 tracking-widest">High Concentration Clusters</span>
+                 <div className="space-y-1.5">
+                    {topConnected.map(([path, count], i) => (
+                      <button key={i} onClick={() => setSelectedNode(path)}
+                        className="w-full flex items-center justify-between py-2.5 px-1 hover:bg-primary/5 border-b border-border/20 last:border-0 group">
+                         <span className="text-[11px] font-mono text-foreground/70 truncate group-hover:text-primary">{path.split('/').pop()}</span>
+                         <span className="text-[10px] font-black text-primary p-1.5 bg-primary/5 rounded">{count}</span>
+                      </button>
+                    ))}
+                 </div>
+              </div>
+
+              {circularDeps.length > 0 && (
+                <div className="p-4 border border-accent/20 bg-accent/5 rounded-sm">
+                   <div className="flex items-center gap-2.5 mb-2.5">
+                      <AlertTriangle className="w-4 h-4 text-accent" />
+                      <span className="text-xs font-black text-accent uppercase tracking-tighter">Circular_Reference_Warn</span>
+                   </div>
+                   <div className="space-y-2.5">
+                      {circularDeps.map((cycle, i) => (
+                        <div key={i} className="text-[10px] font-mono text-accent/80 border-l border-accent/30 pl-3">
+                           {cycle.map(c => c.split('/').pop()).join(' → ')}
+                        </div>
+                      ))}
+                   </div>
                 </div>
-              </button>
-            ))}
-          </div>
+              )}
+           </div>
         </Section>
-      )}
 
-      {/* Complexity Report */}
-      {complexityReport.length > 0 && (
-        <Section id="complexity" title="⚡ Complexity" badge={complexityReport.filter(c => c.level === 'High' || c.level === 'Critical').length}>
-          <div className="space-y-0.5 max-h-48 overflow-y-auto scrollbar-thin">
-            {complexityReport.map((c, i) => (
-              <button key={i} onClick={() => openCodeView(c.file)}
-                className="w-full text-left px-2 py-1.5 rounded-md hover:bg-secondary/40 text-[11px] flex items-center gap-2 transition-colors">
-                <span className={`text-[10px] font-bold w-5 text-center ${
-                  c.level === 'Critical' ? 'text-destructive' : c.level === 'High' ? 'text-warn' : c.level === 'Medium' ? 'text-warn/60' : 'text-success'
-                }`}>{c.level === 'Critical' ? '🔴' : c.level === 'High' ? '🟠' : c.level === 'Medium' ? '🟡' : '🟢'}</span>
-                <span className="truncate flex-1 font-mono text-foreground/80">{c.file.split('/').pop()}</span>
-                <span className="text-muted-foreground/50 font-mono text-[10px]">{c.score}</span>
-              </button>
-            ))}
-          </div>
+        <Section id="hotspots" title="Complexity Vectors" badge={complexityReport.length} icon={Activity}>
+           <div className="space-y-2.5">
+              {complexityReport.map((c, i) => (
+                <button key={i} onClick={() => openCodeView(c.file)}
+                  className="w-full p-4 border border-border/40 bg-card hover:border-primary transition-all group text-left">
+                   <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-mono font-bold text-foreground/80 truncate group-hover:text-primary">{c.file.split('/').pop()}</span>
+                      <span className={`text-[10px] font-black ${c.level === 'Critical' ? 'text-accent' : 'text-primary'}`}>{c.score}</span>
+                   </div>
+                   <div className={`h-1.5 w-full bg-secondary/50 rounded-full overflow-hidden`}>
+                      <div className={`h-full ${c.level === 'Critical' ? 'bg-accent' : 'bg-primary'}`} style={{ width: `${Math.min(100, c.score)}%` }} />
+                   </div>
+                </button>
+              ))}
+           </div>
         </Section>
-      )}
 
-      {/* Orphan Files */}
-      {orphanFiles.length > 0 && (
-        <Section id="orphans" title="⚫ Orphan Files" badge={orphanFiles.length}>
-          <div className="space-y-0.5 max-h-40 overflow-y-auto scrollbar-thin">
-            <p className="text-[10px] text-muted-foreground/40 mb-2">Files with no imports and not imported by anyone</p>
-            {orphanFiles.map((path, i) => (
-              <button key={i} onClick={() => { setSelectedNode(path); openCodeView(path); }}
-                className="w-full text-left px-2 py-1.5 rounded-md hover:bg-secondary/40 text-[11px] flex items-center gap-2 transition-colors">
-                <span className="text-[10px]">⚫</span>
-                <span className="truncate font-mono text-muted-foreground/60">{path}</span>
-              </button>
-            ))}
-          </div>
-        </Section>
-      )}
+      </div>
 
-      {/* ENV Variables */}
-      {envKeys.length > 0 && (
-        <Section id="env" title="🔑 ENV Variables" badge={envKeys.reduce((s, e) => s + e.keys.length, 0)}>
-          <div className="space-y-2">
-            {envKeys.map((env, i) => (
-              <div key={i}>
-                <div className="text-[10px] text-muted-foreground/50 font-mono mb-1">{env.file}</div>
-                {env.keys.map((key, j) => (
-                  <div key={j} className="text-[11px] font-mono text-foreground/70 py-0.5 px-1">● {key}</div>
-                ))}
-              </div>
-            ))}
-            <p className="text-[10px] text-muted-foreground/30 italic">Values hidden for security</p>
-          </div>
-        </Section>
-      )}
-
-      {/* CI/CD Pipelines */}
-      {ciPipelines.length > 0 && (
-        <Section id="cicd" title="⚙️ CI/CD Pipelines" badge={ciPipelines.length}>
-          <div className="space-y-1">
-            {ciPipelines.map((pipeline, i) => (
-              <button key={i} onClick={() => openCodeView(pipeline.file)}
-                className="w-full text-left px-2 py-1.5 rounded-md hover:bg-secondary/40 text-[11px] flex items-start gap-2 transition-colors">
-                <span className="text-[10px]">⚙️</span>
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium text-foreground/80">{pipeline.name}</div>
-                  <div className="text-[10px] text-muted-foreground/40">
-                    triggers: {pipeline.triggers.join(', ') || 'unknown'}
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </Section>
-      )}
-
-      <Section id="gitignore" title="📄 .gitignore">
-        {project.gitignorePatterns.length > 0 ? (
-          <div className="space-y-2">
-            <div className="text-[10px] text-muted-foreground/50 mb-2">{project.gitignorePatterns.length} patterns found</div>
-            <div className="space-y-0.5 max-h-40 overflow-y-auto scrollbar-thin">
-              {project.gitignorePatterns.map((p, i) => {
-                const type = p.endsWith('/') ? 'Directory' : p.includes('*') ? 'Wildcard' : p.startsWith('.') ? 'Hidden file' : 'File';
-                return (
-                  <div key={i} className="flex items-center gap-2 text-[11px] py-1 px-1 rounded hover:bg-secondary/30">
-                    <span className="font-mono text-foreground/70 flex-1 truncate">{p}</span>
-                    <span className="text-muted-foreground/40 text-[10px]">{type}</span>
-                  </div>
-                );
-              })}
+      {/* 03: SYSTEM FOOTER (TELEMETRY) */}
+      <div className="p-6 border-t border-border/80 bg-card/60">
+         <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+               <div className="flex items-center gap-2.5">
+                  <FileText className="w-3.5 h-3.5 text-muted-foreground/60" />
+                  <span className="text-[10px] font-mono font-black text-muted-foreground/60 uppercase tracking-widest">Payload_Capacity</span>
+               </div>
+               <span className="text-sm font-black text-foreground">{formatSize(totalSize)}</span>
             </div>
-            <p className="text-[10px] text-muted-foreground/30 italic">Files exist locally but not in the repository</p>
-          </div>
-        ) : (
-          <span className="text-xs text-muted-foreground/50 italic">No .gitignore file detected</span>
-        )}
-      </Section>
-
-      <Section id="packages" title="📦 External Packages" badge={externalPackages.deps.length}>
-        {externalPackages.deps.length > 0 ? (
-          <div className="space-y-3">
-            <div>
-              <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground/50 mb-1.5 font-medium">Dependencies</h4>
-              <div className="space-y-0.5 max-h-40 overflow-y-auto scrollbar-thin">
-                {externalPackages.deps.map(([name, ver], i) => {
-                  const usage = externalPackages.usageCount?.get(name) || 0;
-                  return (
-                    <a key={i} href={`https://www.npmjs.com/package/${name}`} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-[11px] py-1 px-1 rounded hover:bg-secondary/30">
-                      <span className="font-mono text-foreground/70 flex-1 truncate hover:text-primary transition-colors">{name}</span>
-                      <span className="text-muted-foreground/40 text-[10px] font-mono">{ver}</span>
-                      {usage > 0 && <span className="text-primary/60 text-[10px] font-mono">{usage}×</span>}
-                    </a>
-                  );
-                })}
-              </div>
+            <div className="flex items-center justify-between">
+               <div className="flex items-center gap-2.5">
+                  <History className="w-3.5 h-3.5 text-muted-foreground/60" />
+                  <span className="text-[10px] font-mono font-black text-muted-foreground/60 uppercase tracking-widest">Thread_Connectivity</span>
+               </div>
+               <span className="text-sm font-black text-foreground">ACTIVE_SYNC</span>
             </div>
-            {externalPackages.devDeps.length > 0 && (
-              <div>
-                <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground/50 mb-1.5 font-medium">Dev Dependencies</h4>
-                <div className="space-y-0.5 max-h-32 overflow-y-auto scrollbar-thin">
-                  {externalPackages.devDeps.map(([name, ver], i) => (
-                    <a key={i} href={`https://www.npmjs.com/package/${name}`} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-[11px] py-1 px-1 rounded hover:bg-secondary/30">
-                      <span className="font-mono text-foreground/70 flex-1 truncate hover:text-primary transition-colors">{name}</span>
-                      <span className="text-muted-foreground/40 text-[10px] font-mono">{ver}</span>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <span className="text-xs text-muted-foreground/50 italic">No package.json found</span>
-        )}
-      </Section>
-
-      <Section id="techstack" title="🛠 Tech Stack" badge={project.techStack.length}>
-        <div className="flex flex-wrap gap-1.5">
-          {project.techStack.map((tech, i) => (
-            <span key={i} className="px-2.5 py-1 bg-secondary/60 rounded-md text-xs font-medium text-foreground/80">{tech}</span>
-          ))}
-          {project.techStack.length === 0 && <span className="text-xs text-muted-foreground/50 italic">No package.json found</span>}
-        </div>
-        {project.packageJson?.scripts && (
-          <div className="mt-3 space-y-1">
-            <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium">Scripts</h4>
-            {Object.entries(project.packageJson.scripts).slice(0, 8).map(([name, cmd]) => (
-              <div key={name} className="flex items-center gap-2 text-[11px] font-mono">
-                <span className="text-primary/80 font-semibold">{name}</span>
-                <span className="text-muted-foreground/50 truncate">{cmd as string}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </Section>
-
-      <div className="p-4 border-t border-border/40">
-        <div className="text-[10px] text-muted-foreground/40 text-center font-mono">
-          {totalLines.toLocaleString()} lines • {formatSize(totalSize)}
-        </div>
+            
+            <div className="mt-4 flex items-center justify-between pt-5 border-t border-border/40">
+               <div className="flex items-center gap-2.5">
+                  <Cpu className="w-5 h-5 text-primary opacity-40 shadow-primary/20" />
+                  <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">Protocol::Static</span>
+               </div>
+               <div className="flex gap-1.5">
+                  {[1,2,3,4].map(i => <div key={i} className="w-1.5 h-4 bg-primary/20" />)}
+               </div>
+            </div>
+         </div>
       </div>
     </div>
   );

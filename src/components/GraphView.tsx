@@ -6,6 +6,15 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { useStore } from '@/store/useStore';
 import { getFileTypeInfo } from '@/lib/fileIcons';
+import {
+  Zap,
+  Settings2,
+  ShieldCheck,
+  MoreHorizontal,
+  Layers,
+  Network,
+  Maximize2
+} from 'lucide-react';
 
 function FileNodeComponent({ data, selected }: NodeProps) {
   const { openCodeView, selectedNode, setContextMenu } = useStore();
@@ -20,28 +29,34 @@ function FileNodeComponent({ data, selected }: NodeProps) {
 
   return (
     <div
-      className={`group relative px-3 py-2.5 rounded-lg border transition-all duration-200 cursor-pointer min-w-[140px] max-w-[220px] ${
-        selected
-          ? 'border-node-selected glow-primary-sm bg-node-bg scale-[1.04]'
-          : isDimmed
+      className={`group relative px-3 py-2.5 rounded-lg border transition-all duration-200 cursor-pointer min-w-[140px] max-w-[220px] ${selected
+        ? 'border-node-selected glow-primary-sm bg-node-bg scale-[1.04]'
+        : isDimmed
           ? 'border-node-border/40 bg-node-bg/50 opacity-35'
           : 'border-node-border bg-node-bg hover:border-muted-foreground hover:shadow-md hover:shadow-black/10 hover:-translate-y-0.5'
-      }`}
+        }`}
       onDoubleClick={() => openCodeView(data.path)}
       onContextMenu={handleContextMenu}
     >
       <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-primary/80 !border-0 !-top-1" />
       <div className="flex items-center gap-2.5">
-        <span className="text-[10px] font-mono font-bold w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105"
-          style={{ backgroundColor: info.color + '18', color: info.color }}>
-          {info.icon}
+        <span className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105 ${info.iconUrl ? '' : 'text-[8px] font-mono font-bold border border-white/5'}`}
+          style={info.iconUrl ? {} : {
+            backgroundColor: `hsl(var(--${info.colorVar}) / 0.15)`,
+            color: `hsl(var(--${info.colorVar}))`
+          }}>
+          {info.iconUrl ? (
+            <img src={info.iconUrl} alt={info.language} className="w-6 h-6 object-contain" />
+          ) : (
+            info.icon
+          )}
         </span>
         <div className="min-w-0 flex-1">
           <div className="text-xs font-medium truncate text-foreground flex items-center gap-1">
-            {data.isEntryPoint && <span className="text-warn text-[10px]">⚡</span>}
-            {data.isOrphan && <span className="text-[10px]" title="Orphan file">⚫</span>}
-            {data.isTest && <span className="text-[10px]" title="Test file">🧪</span>}
-            {data.isConfig && <span className="text-[10px]" title="Config file">⚙️</span>}
+            {data.isEntryPoint && <span className="text-primary animate-pulse-ring" title="Entry Point"><Zap className="w-2.5 h-2.5 fill-current" /></span>}
+            {data.isOrphan && <span className="text-muted-foreground/30" title="Orphan file"><MoreHorizontal className="w-2.5 h-2.5" /></span>}
+            {data.isTest && <span className="text-accent" title="Test file"><ShieldCheck className="w-2.5 h-2.5" /></span>}
+            {data.isConfig && <span className="text-muted-foreground/60" title="Config file"><Settings2 className="w-2.5 h-2.5" /></span>}
             {data.name}
             {data.fileOrder && <span className="text-[9px] text-muted-foreground/40 font-mono ml-1">#{data.fileOrder}</span>}
           </div>
@@ -55,11 +70,10 @@ function FileNodeComponent({ data, selected }: NodeProps) {
           </div>
         </div>
         {data.complexityLevel && (
-          <span className={`text-[8px] font-bold px-1 py-0.5 rounded ${
-            data.complexityLevel === 'Critical' ? 'bg-destructive/20 text-destructive' :
+          <span className={`text-[8px] font-bold px-1 py-0.5 rounded ${data.complexityLevel === 'Critical' ? 'bg-destructive/20 text-destructive' :
             data.complexityLevel === 'High' ? 'bg-warn/20 text-warn' :
-            data.complexityLevel === 'Medium' ? 'bg-warn/10 text-warn/60' : 'bg-success/10 text-success/60'
-          }`}>{data.complexityLevel[0]}</span>
+              data.complexityLevel === 'Medium' ? 'bg-warn/10 text-warn/60' : 'bg-success/10 text-success/60'
+            }`}>{data.complexityLevel[0]}</span>
         )}
       </div>
       <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-primary/80 !border-0 !-bottom-1" />
@@ -305,7 +319,7 @@ function GraphViewInner() {
   // Import analysis data lazily
   const analysisData = useMemo(() => {
     if (!project) return { orphans: new Set<string>(), tests: new Set<string>(), configs: new Set<string>(), complexity: new Map<string, { score: number; level: string }>() };
-    
+
     // Inline simple versions to avoid async import
     const hasImports = new Set<string>();
     const isImported = new Set<string>();
@@ -334,7 +348,7 @@ function GraphViewInner() {
       const level = score >= 80 ? 'Critical' : score >= 50 ? 'High' : score >= 25 ? 'Medium' : 'Low';
       complexity.set(f.path, { score, level });
     }
-    
+
     return { orphans, tests, configs, complexity };
   }, [project]);
 
@@ -363,7 +377,7 @@ function GraphViewInner() {
     });
 
     let textFiles = project.files.filter(f => !f.isBinary);
-    
+
     // Apply filter
     if (filter !== 'all') {
       textFiles = textFiles.filter(f => {
@@ -450,7 +464,7 @@ function GraphViewInner() {
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
-  const onNodeClick = useCallback((_: any, node: Node) => setSelectedNode(node.id), [setSelectedNode]);
+  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => setSelectedNode(node.id), [setSelectedNode]);
   const onPaneClick = useCallback(() => { setSelectedNode(null); setContextMenu(null); }, [setSelectedNode, setContextMenu]);
 
   const handleFitView = useCallback(() => {
@@ -468,7 +482,7 @@ function GraphViewInner() {
 
   const bgVariant = bgPattern === 'lines' ? BackgroundVariant.Lines
     : bgPattern === 'cross' ? BackgroundVariant.Cross
-    : BackgroundVariant.Dots;
+      : BackgroundVariant.Dots;
 
   const FILTERS: { id: FilterMode; label: string }[] = [
     { id: 'all', label: 'All' },
@@ -484,23 +498,31 @@ function GraphViewInner() {
   return (
     <div className="w-full h-full bg-graph relative">
       {/* Filter bar */}
-      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-card/90 backdrop-blur-sm border border-border rounded-xl px-1.5 py-1 shadow-lg shadow-black/10">
-        {FILTERS.map(f => (
-          <button key={f.id} onClick={() => setFilter(f.id)}
-            className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
-              filter === f.id ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground/60 hover:text-foreground hover:bg-secondary/50'
-            }`}>
-            {f.label}
-          </button>
-        ))}
-        <div className="w-px h-4 bg-border/60 mx-0.5" />
-        <select value={colorBy} onChange={e => setColorBy(e.target.value as ColorByMode)}
-          className="text-[10px] bg-transparent border-0 text-muted-foreground/60 cursor-pointer focus:outline-none px-1">
-          <option value="type">🎨 File Type</option>
-          <option value="folder">📁 Folder</option>
-          <option value="connections">🔗 Connections</option>
-          <option value="complexity">⚡ Complexity</option>
-        </select>
+      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 flex items-center bg-card/90 backdrop-blur-2xl border border-white/10 p-1 rounded-sm shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all pointer-events-auto">
+        <div className="flex items-center gap-0.5">
+          {FILTERS.map(f => (
+            <button key={f.id} onClick={() => setFilter(f.id)}
+              className={`px-3 py-1.5 rounded-sm text-[10px] font-mono font-black uppercase tracking-widest transition-all ${filter === f.id
+                ? 'bg-primary/20 text-primary shadow-sm border border-primary/30'
+                : 'text-foreground/80 border border-transparent hover:text-foreground hover:bg-white/10'
+                }`}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <div className="w-[1px] h-4 bg-border/80 mx-2" />
+        <div className="relative group">
+          <select value={colorBy} onChange={e => setColorBy(e.target.value as ColorByMode)}
+            className="text-[10px] bg-transparent border-0 font-mono font-black uppercase tracking-[0.15em] text-foreground/80 cursor-pointer focus:outline-none pl-2 pr-6 hover:text-foreground transition-colors appearance-none relative z-10 w-full">
+            <option value="type" className="bg-card text-foreground">Color::Type</option>
+            <option value="folder" className="bg-card text-foreground">Color::Root</option>
+            <option value="connections" className="bg-card text-foreground">Color::Vector</option>
+            <option value="complexity" className="bg-card text-foreground">Color::Compute</option>
+          </select>
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-foreground/60 group-hover:text-primary transition-colors">
+            ▼
+          </div>
+        </div>
       </div>
 
       <ReactFlow

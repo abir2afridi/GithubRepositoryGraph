@@ -55,14 +55,14 @@ export interface ProjectData {
   files: FileNode[];
   dependencies: Dependency[];
   gitignorePatterns: string[];
-  packageJson: any | null;
+  packageJson: Record<string, unknown> | null;
   techStack: string[];
   entryPoints: string[];
   repoMeta?: RepoMeta;
   fileOrder?: Map<string, number>;
 }
 
-export type ThemeId = 'dark' | 'light' | 'neon' | 'blueprint' | 'pastel' | 'blood' | 'forest';
+export type ThemeId = 'dark' | 'light' | 'neon' | 'blueprint' | 'pastel' | 'blood' | 'forest' | 'sunset' | 'electric' | 'midnight' | 'matrix' | 'cyber' | 'drift' | 'arctic' | 'desert' | 'lava' | 'void';
 export type LayoutId = 'force' | 'hierarchy' | 'circular' | 'grid' | 'radial';
 export type ShapeId = 'auto' | 'human' | 'jet' | 'cat' | 'tree' | 'star' | 'heart' | 'wave' | 'circle' | 'diamond' | 'honeycomb' | 'pyramid' | 'spiral';
 export type EdgeStyle = 'bezier' | 'straight' | 'step' | 'animated-dots';
@@ -163,7 +163,20 @@ export const useStore = create<AppState>((set, get) => ({
   setLoading: (loading, message = '', progress = 0) => set({ isLoading: loading, loadingMessage: message, loadingProgress: progress }),
   setError: (error) => set({ error, isLoading: false }),
   setTheme: (theme) => {
-    document.documentElement.className = theme === 'dark' ? '' : `theme-${theme}`;
+    const root = document.documentElement;
+    // Remove all theme classes first
+    root.classList.forEach(cls => {
+      if (cls.startsWith('theme-')) root.classList.remove(cls);
+    });
+    
+    // Set new theme
+    if (theme !== 'dark') {
+      root.classList.add(`theme-${theme}`);
+      root.classList.remove('dark');
+    } else {
+      root.classList.add('dark');
+    }
+    
     set({ theme });
   },
   setLayout: (layout) => set({ layout }),

@@ -10,13 +10,13 @@ import { TopStatsBar } from '@/components/TopStatsBar';
 import { GuidePanel } from '@/components/GuidePanel';
 import { ExportModal } from '@/components/ExportModal';
 import { SearchPanel } from '@/components/SearchPanel';
-import { RepoInfoPanel } from '@/components/RepoInfoPanel';
 import { OnboardingTour } from '@/components/OnboardingTour';
 import { PresentationMode } from '@/components/PresentationMode';
 import { NodeContextMenu } from '@/components/NodeContextMenu';
 
 export default function Index() {
-  const { project, toggleExport, presentationMode, contextMenu, setContextMenu } = useStore();
+  const { project, toggleExport, presentationMode, contextMenu, setContextMenu, theme, 
+          searchOpen, toggleSearch } = useStore();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -34,21 +34,22 @@ export default function Index() {
   if (presentationMode) return <PresentationMode />;
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
+    <div className={`h-screen w-screen flex flex-col overflow-hidden bg-background ${theme}`}>
       <TopStatsBar />
       <div className="flex-1 flex overflow-hidden relative">
         <IntelligencePanel />
         <div className="flex-1 relative overflow-hidden">
           <GraphView />
-          <Toolbar />
           <CustomizationPanel />
           <GuidePanel />
-          <SearchPanel />
+          {searchOpen && <SearchPanel onClose={toggleSearch} />}
         </div>
         <CodeViewPanel />
       </div>
+      
+      {/* Global Viewport Components */}
+      <Toolbar />
       <ExportModal />
-      <RepoInfoPanel />
       <OnboardingTour />
       {contextMenu && (
         <NodeContextMenu

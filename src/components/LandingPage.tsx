@@ -2,32 +2,13 @@ import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 import { loadFromGitHub, loadFromFolder, loadDemo, addRecentSession, getRecentSessions } from '@/lib/projectLoader';
 import { toast } from 'sonner';
-
-// Floating particle component for ambient background
-function FloatingParticles() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {Array.from({ length: 20 }).map((_, i) => (
-        <div
-          key={i}
-          className="absolute rounded-full opacity-[0.04]"
-          style={{
-            width: `${4 + Math.random() * 8}px`,
-            height: `${4 + Math.random() * 8}px`,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            backgroundColor: `hsl(${220 + Math.random() * 80}, 70%, 60%)`,
-            animation: `particle-drift ${12 + Math.random() * 20}s ease-in-out infinite`,
-            animationDelay: `${-Math.random() * 20}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
+import { 
+  AlertTriangle, FolderOpen, Sparkles, Github, Clock, Monitor, X, 
+  ShieldAlert, Cpu, Terminal, Moon, Sun
+} from 'lucide-react';
 
 export function LandingPage() {
-  const { setProject, setLoading, setError, isLoading, loadingMessage, loadingProgress } = useStore();
+  const { setProject, setLoading, isLoading, loadingMessage, loadingProgress, theme, setTheme } = useStore();
   const [url, setUrl] = useState('');
   const [urlError, setUrlError] = useState('');
   const [dragOver, setDragOver] = useState(false);
@@ -46,51 +27,51 @@ export function LandingPage() {
     if (!url.trim()) return;
     setUrlError('');
     setShowPrivateWarning(false);
-    setLoading(true, 'Starting...', 0);
+    setLoading(true, 'INITIATING_SEQUENCE...', 0);
     try {
       const project = await loadFromGitHub(url, (msg, pct) => setLoading(true, msg, pct));
       addRecentSession(project.name, 'github');
       setProject(project);
       setLoading(false);
-      toast.success(`Loaded ${project.files.length} files, ${project.dependencies.length} dependencies found`);
-    } catch (e: any) {
+      toast.success(`SYSTEM UPDATED: ${project.files.length} NODES LOGGED`);
+    } catch (e) {
       setLoading(false);
-      const msg = e.message || '';
+      const msg = (e as Error).message || '';
       if (msg === 'PRIVATE') {
         setShowPrivateWarning(true);
       } else if (msg.startsWith('RATE_LIMIT:')) {
         setRateLimitReset(parseInt(msg.split(':')[1]));
       } else if (msg === 'NOT_FOUND') {
-        setUrlError('Repository not found. Check the URL and try again.');
+        setUrlError('ERR 404: TARGET UNREACHABLE');
       } else if (msg === 'EMPTY') {
-        setUrlError('This repository has no files yet.');
+        setUrlError('ERR 000: PAYLOAD EMPTY');
       } else if (msg === 'NO_BRANCH') {
-        setUrlError('No branch detected. Try specifying: github.com/owner/repo/tree/branch-name');
+        setUrlError('ERR 011: BRANCH IDENTIFIER MISSING');
       } else {
-        setUrlError(msg);
+        setUrlError(msg.toUpperCase());
       }
     }
-  }, [url, setProject, setLoading, setError]);
+  }, [url, setProject, setLoading]);
 
   const handleFolderUpload = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    setLoading(true, 'Reading files...', 0);
+    setLoading(true, 'ANALYZING_LOCAL_PAYLOAD...', 0);
     try {
-      const project = await loadFromFolder(files, (msg, pct) => setLoading(true, msg, pct));
-      addRecentSession(project.name, 'local');
-      setProject(project);
+      const projectData = await loadFromFolder(files, (msg, pct) => setLoading(true, msg, pct));
+      addRecentSession(projectData.name, 'local');
+      setProject(projectData);
       setLoading(false);
-      toast.success(`Loaded ${project.files.length} files, ${project.dependencies.length} dependencies found`);
-    } catch (e: any) {
+      toast.success(`LOCAL SYNC COMPLETE: ${projectData.files.length} NODES LINKED`);
+    } catch (e) {
       setLoading(false);
-      toast.error('Failed to process folder: ' + e.message);
+      toast.error('FATAL ERR: ' + (e as Error).message.toUpperCase());
     }
   }, [setProject, setLoading]);
 
   const handleDemo = useCallback(() => {
     const project = loadDemo();
     setProject(project);
-    toast.success('Demo project loaded — explore the graph!');
+    toast.success('DEMO_PROTOCOL::ACTIVE');
   }, [setProject]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -99,170 +80,163 @@ export function LandingPage() {
 
   const stagger = (i: number) => ({
     opacity: mounted ? 1 : 0,
-    transform: mounted ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.98)',
-    filter: mounted ? 'blur(0px)' : 'blur(4px)',
-    transition: `all 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${150 + i * 100}ms`,
+    transform: mounted ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.99)',
+    transition: `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${i * 100}ms`,
   });
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Background layers */}
-      <div className="absolute inset-0 graph-bg-dots opacity-20" />
-      <FloatingParticles />
-      <div className="absolute top-1/3 left-1/3 w-[500px] h-[500px] bg-primary/[0.03] rounded-full blur-[100px]" />
-      <div className="absolute bottom-1/3 right-1/4 w-[400px] h-[400px] bg-accent/[0.03] rounded-full blur-[100px]" />
+    <div className={`min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden font-sans selection:bg-primary/30 ${theme === 'dark' ? 'dark' : ''}`}>
+      
+      {/* Global Accents */}
+      <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start pointer-events-none z-20">
+        <div className="text-[11px] uppercase font-black font-mono tracking-widest text-foreground/40 flex items-center gap-2">
+          <ShieldAlert className="w-3.5 h-3.5" />
+          AES-256 ENCRYPTION :: SECURE
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1 bg-background border border-border/50 backdrop-blur-md">
+          <span className="w-2 h-2 bg-primary rounded-none animate-pulse" />
+          <span className="text-[10px] uppercase font-black font-mono tracking-widest text-primary">PROTOCOL ACTIVE</span>
+        </div>
+      </div>
 
-      <div className="relative z-10 max-w-xl w-full space-y-7">
-        {/* Logo + tagline */}
-        <div className="text-center space-y-3" style={stagger(0)}>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/[0.08] border border-primary/[0.12] text-primary text-xs font-medium mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            Code Dependency Visualizer
-          </div>
-          <h1 className="text-5xl md:text-6xl font-display font-extrabold text-gradient leading-[1.05] tracking-tight">
-            RepoGraph
+      {/* Theme Toggle mapped to Top Right */}
+      <div className="absolute top-4 right-4 sm:top-16 sm:right-10 z-50">
+        <button 
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className="p-3 border border-border/50 bg-background/50 backdrop-blur-md hover:bg-foreground/5 hover:border-foreground/30 transition-all rounded-none text-foreground/60 hover:text-foreground shadow-[0_0_15px_rgba(var(--primary),0.1)] focus:outline-none"
+          title="Toggle Light/Dark Mode"
+        >
+          {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </button>
+      </div>
+
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/[0.03] rounded-full blur-[100px]" />
+        <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center">
+        
+        {/* Header */}
+        <div className="text-center mb-16 space-y-4" style={stagger(0)}>
+          <h1 className="text-6xl md:text-[7rem] leading-none font-black uppercase tracking-tighter text-foreground drop-shadow-[0_0_30px_rgba(var(--primary),0.15)] flex items-center justify-center gap-4">
+            <Terminal className="w-16 h-16 md:w-20 md:h-20 text-primary" strokeWidth={1.5} />
+            REPOGRAPH
           </h1>
-          <p className="text-muted-foreground text-base max-w-sm mx-auto leading-relaxed">
-            Paste a GitHub URL or drop a folder to explore your codebase as an interactive graph.
+          <p className="text-[11px] font-mono tracking-[0.4em] text-foreground/50 uppercase">
+             SURGICAL CODEBASE MAPPING ENGINE V3
           </p>
         </div>
 
-        {/* Loading state */}
-        {isLoading && (
-          <div className="bg-card border border-border rounded-xl p-5 space-y-3" style={stagger(1)}>
-            <div className="flex items-center gap-3">
-              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              <span className="text-sm font-mono text-muted-foreground truncate">{loadingMessage}</span>
-            </div>
-            <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${loadingProgress}%` }}
-              />
-            </div>
-            <div className="text-right text-[10px] text-muted-foreground font-mono">{loadingProgress}%</div>
+        {/* Loading Overlay */}
+        {isLoading ? (
+          <div className="w-full max-w-2xl bg-background/80 backdrop-blur-xl border border-primary/40 p-8 space-y-6" style={stagger(1)}>
+             <div className="flex items-center gap-4">
+                <Spinner />
+                <span className="text-[11px] font-black font-mono uppercase tracking-[0.2em] text-primary">{loadingMessage}</span>
+             </div>
+             <div className="w-full h-1 bg-foreground/10 overflow-hidden relative">
+                <div className="absolute top-0 left-0 h-full bg-primary transition-all duration-500 shadow-[0_0_10px_rgba(var(--primary),0.5)]" style={{ width: `${loadingProgress}%` }} />
+             </div>
+             <div className="text-right text-[9px] text-foreground/50 font-black font-mono uppercase tracking-widest">{loadingProgress}% CALIBRATED</div>
           </div>
-        )}
-
-        {/* Private repo warning */}
-        {showPrivateWarning && (
-          <div className="bg-warn/[0.06] border border-warn/20 rounded-xl p-5 space-y-3">
-            <div className="flex items-start gap-3">
-              <span className="text-xl mt-0.5">⚠️</span>
-              <div className="space-y-2 flex-1">
-                <h3 className="font-display font-bold text-warn text-sm">Private or Locked Repository</h3>
-                <p className="text-xs text-foreground/70 leading-relaxed">
-                  RepoGraph only supports public repositories. Make your repo public on GitHub, or upload your project folder directly.
-                </p>
-                <button
-                  onClick={() => { setShowPrivateWarning(false); fileInputRef.current?.click(); }}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:brightness-110 active:scale-[0.97] transition-all"
-                >
-                  Try Folder Upload →
-                </button>
+        ) : (
+          <div className="w-full flex flex-col items-center gap-8" style={stagger(1)}>
+            
+            {/* Primary Action: Giant URL Input */}
+            <div className="w-full flex flex-col gap-2">
+              <div className="w-full flex flex-col sm:flex-row items-stretch border border-border/50 bg-background/50 backdrop-blur-xl shadow-2xl shadow-black/20 focus-within:border-primary/50 focus-within:shadow-[0_0_30px_rgba(var(--primary),0.15)] transition-all">
+                 <div className="hidden sm:flex w-16 items-center justify-center bg-muted/20 border-r border-border/50 shrink-0">
+                    <Github className="w-6 h-6 text-foreground/50" />
+                 </div>
+                 <div className="relative flex-1 flex items-center">
+                   <input 
+                     type="text"
+                     value={url}
+                     onChange={e => { setUrl(e.target.value); setUrlError(''); setShowPrivateWarning(false); }}
+                     onKeyDown={handleKeyDown}
+                     placeholder="PASTE GITHUB URL HERE..."
+                     className="w-full h-full bg-transparent text-foreground text-sm sm:text-base font-mono p-4 sm:p-5 focus:outline-none rounded-none placeholder:text-foreground/30 focus:bg-foreground/[0.02]"
+                   />
+                   {url && (
+                     <button onClick={() => setUrl('')} className="absolute right-4 text-foreground/40 hover:text-foreground">
+                        <X className="w-5 h-5" />
+                     </button>
+                   )}
+                 </div>
+                 <button 
+                   onClick={handleLoad}
+                   disabled={!url.trim()}
+                   className="px-6 sm:px-10 py-4 sm:py-0 bg-primary text-primary-foreground font-black text-xs sm:text-sm uppercase tracking-[0.2em] hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-30 disabled:pointer-events-none rounded-none"
+                 >
+                   EXECUTE
+                 </button>
               </div>
+
+              {/* Status/Error Messages */}
+              {urlError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 text-[10px] sm:text-xs font-mono text-red-500 tracking-widest uppercase flex items-center gap-3">
+                   <AlertTriangle className="w-4 h-4" /> {urlError}
+                </div>
+              )}
+              {showPrivateWarning && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 text-[10px] sm:text-xs font-mono text-red-500 tracking-widest uppercase flex items-center gap-3">
+                   <AlertTriangle className="w-4 h-4" /> ERR: TARGET IS PRIVATE. USE LOCAL SYNC INSTEAD.
+                </div>
+              )}
+              {rateLimitReset !== null && rateLimitReset !== undefined && (
+                <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 text-[10px] sm:text-xs font-mono text-yellow-600 tracking-widest uppercase flex items-center gap-3">
+                   <Clock className="w-4 h-4" /> <RateLimitTimer reset={rateLimitReset} onExpired={() => setRateLimitReset(null)} onFolderClick={() => fileInputRef.current?.click()} />
+                </div>
+              )}
             </div>
-          </div>
-        )}
 
-        {/* Rate limit */}
-        {rateLimitReset && <RateLimitTimer reset={rateLimitReset} onExpired={() => setRateLimitReset(null)} onFolderClick={() => fileInputRef.current?.click()} />}
+            {/* Alternative Actions: Local & Demo */}
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+               {/* Drag & Drop Local Directory */}
+               <div 
+                 onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                 onDragLeave={() => setDragOver(false)}
+                 onDrop={e => { e.preventDefault(); setDragOver(false); handleFolderUpload(e.dataTransfer.files); }}
+                 className={`group relative backdrop-blur-xl border border-border/50 p-6 flex flex-col justify-center items-center py-10 transition-all duration-300 hover:border-foreground/30 hover:bg-foreground/[0.02] cursor-pointer rounded-none ${dragOver ? 'border-primary bg-primary/5' : 'bg-background/50'}`}
+                 onClick={() => fileInputRef.current?.click()}
+               >
+                 <input
+                   ref={fileInputRef}
+                   type="file"
+                   className="hidden"
+                   {...{ webkitdirectory: '', directory: '' } as Record<string, string>}
+                   onChange={e => handleFolderUpload(e.target.files)}
+                 />
+                 <Cpu className={`w-8 h-8 mb-4 transition-colors ${dragOver ? 'text-primary' : 'text-foreground/40 group-hover:text-foreground'}`} />
+                 <h2 className="text-sm font-black uppercase tracking-widest text-foreground text-center">Local Ingestion</h2>
+                 <p className="text-[10px] text-foreground/40 font-mono uppercase tracking-widest mt-2">{dragOver ? 'DROP NOW' : 'SELECT DIRECTORY (100% CLIENT-SIDE)'}</p>
+               </div>
 
-        {/* URL Input */}
-        {!isLoading && (
-          <div className="space-y-2" style={stagger(1)}>
-            <div className="flex gap-2">
-              <div className="flex-1 relative group">
-                <input
-                  type="text"
-                  value={url}
-                  onChange={e => { setUrl(e.target.value); setUrlError(''); setShowPrivateWarning(false); }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="github.com/owner/repo"
-                  className="w-full h-12 px-4 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary/50 font-mono text-sm transition-all"
-                />
-                {url && (
-                  <button
-                    onClick={() => setUrl('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs transition-colors"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-              <button
-                onClick={handleLoad}
-                disabled={!url.trim()}
-                className="h-12 px-7 bg-primary text-primary-foreground rounded-xl font-display font-semibold text-sm hover:brightness-110 active:scale-[0.97] transition-all disabled:opacity-30 disabled:pointer-events-none shadow-lg shadow-primary/20"
-              >
-                Analyze
-              </button>
+               {/* Demo */}
+               <div 
+                 onClick={handleDemo}
+                 className="group relative backdrop-blur-xl border border-border/50 bg-background/50 p-6 flex flex-col justify-center items-center py-10 transition-all duration-300 hover:border-primary/50 hover:bg-primary/[0.02] hover:shadow-[0_0_20px_rgba(var(--primary),0.1)] cursor-pointer rounded-none"
+               >
+                 <Sparkles className="w-8 h-8 mb-4 text-primary opacity-60 group-hover:opacity-100 transition-opacity" />
+                 <h2 className="text-sm font-black uppercase tracking-widest text-foreground text-center">Demo Simulation</h2>
+                 <p className="text-[10px] text-foreground/40 font-mono uppercase tracking-widest mt-2">INITIALIZE PRE-CONFIGURED ARCHITECTURE</p>
+               </div>
             </div>
-            {urlError && (
-              <p className="text-destructive text-xs whitespace-pre-line pl-1 flex items-start gap-1.5">
-                <span className="mt-0.5">⚠</span>
-                {urlError}
-              </p>
-            )}
-          </div>
-        )}
 
-        {/* Divider */}
-        {!isLoading && (
-          <div className="flex items-center gap-3" style={stagger(2)}>
-            <div className="flex-1 h-px bg-border" />
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-medium">or</span>
-            <div className="flex-1 h-px bg-border" />
-          </div>
-        )}
-
-        {/* Drag & drop */}
-        {!isLoading && (
-          <div
-            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={e => { e.preventDefault(); setDragOver(false); handleFolderUpload(e.dataTransfer.files); }}
-            onClick={() => fileInputRef.current?.click()}
-            className={`group border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-300 ${
-              dragOver
-                ? 'border-primary bg-primary/[0.04] scale-[1.01]'
-                : 'border-border/60 hover:border-muted-foreground/40 hover:bg-card/30'
-            }`}
-            style={stagger(3)}
-          >
-            <div className="text-2xl mb-2 transition-transform duration-300 group-hover:scale-110">📂</div>
-            <p className="text-sm font-medium text-foreground/80 mb-0.5">
-              {dragOver ? 'Drop your folder here' : 'Drag & drop a project folder'}
-            </p>
-            <p className="text-xs text-muted-foreground/60">Click to browse • 100% offline • No upload</p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              {...{ webkitdirectory: '', directory: '' } as any}
-              onChange={e => handleFolderUpload(e.target.files)}
-            />
-          </div>
-        )}
-
-        {/* Demo + recent */}
-        {!isLoading && (
-          <div className="flex flex-col items-center gap-4" style={stagger(4)}>
-            <button
-              onClick={handleDemo}
-              className="group px-5 py-2.5 bg-card border border-border rounded-xl font-medium text-sm text-foreground/80 hover:border-primary/30 hover:text-foreground hover:bg-card/80 active:scale-[0.97] transition-all flex items-center gap-2"
-            >
-              <span className="transition-transform group-hover:rotate-12">✨</span>
-              Try Demo Project
-            </button>
-
+            {/* History Nodes */}
             {recent.length > 0 && (
-              <div className="text-center space-y-2">
-                <p className="text-[10px] text-muted-foreground/50 uppercase tracking-widest font-medium">Recent</p>
-                <div className="flex gap-1.5 flex-wrap justify-center">
+              <div className="w-full mt-8 space-y-4" style={stagger(2)}>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 h-px bg-border/40" />
+                  <p className="text-[9px] text-foreground/30 uppercase tracking-[0.5em] font-black">History::Nodes</p>
+                  <div className="flex-1 h-px bg-border/40" />
+                </div>
+                <div className="flex gap-2 flex-wrap justify-center overflow-hidden">
                   {recent.map((r, i) => (
-                    <span key={i} className="px-2.5 py-1 bg-card border border-border/50 rounded-lg text-[11px] text-muted-foreground">
-                      {r.source === 'github' ? '🐙' : '📁'} {r.name}
+                    <span key={i} className="px-3 py-1.5 bg-muted/20 border border-border/40 text-[10px] font-mono text-foreground/50 flex items-center gap-2 hover:bg-muted/40 cursor-pointer transition-colors" onClick={() => r.source === 'github' ? setUrl(`github.com/${r.name}`) : null}>
+                      {r.source === 'github' ? <Github className="w-3 h-3 opacity-40" /> : <Monitor className="w-3 h-3 opacity-40" />}
+                      {r.name}
                     </span>
                   ))}
                 </div>
@@ -271,24 +245,14 @@ export function LandingPage() {
           </div>
         )}
 
-        {/* Steps */}
-        {!isLoading && (
-          <div className="grid grid-cols-3 gap-3 pt-2" style={stagger(5)}>
-            {[
-              { icon: '📋', title: 'Paste or Drop', desc: 'GitHub URL or local folder' },
-              { icon: '🔍', title: 'Auto-Parse', desc: 'All imports & dependencies' },
-              { icon: '🗺️', title: 'Explore', desc: 'Interactive graph + code view' },
-            ].map((step, i) => (
-              <div key={i} className="text-center space-y-1.5 p-3 rounded-xl bg-card/30 border border-border/30">
-                <div className="text-lg">{step.icon}</div>
-                <h3 className="font-display font-semibold text-xs text-foreground/80">{step.title}</h3>
-                <p className="text-[10px] text-muted-foreground/60 leading-relaxed">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
+  );
+}
+
+function Spinner() {
+  return (
+    <div className="w-5 h-5 border-2 border-primary border-t-transparent animate-spin rounded-none" />
   );
 }
 
@@ -306,13 +270,11 @@ function RateLimitTimer({ reset, onExpired, onFolderClick }: { reset: number; on
   }, [reset, onExpired]);
 
   return (
-    <div className="bg-warn/[0.06] border border-warn/20 rounded-xl p-5 space-y-2">
-      <h3 className="font-display font-bold text-warn text-sm flex items-center gap-2">⏱️ Rate Limit Reached</h3>
-      <p className="text-xs text-foreground/70">Try again in: <span className="font-mono font-bold text-warn">{remaining}</span></p>
-      <p className="text-xs text-muted-foreground/60">Or upload your folder directly — no limit.</p>
-      <button onClick={onFolderClick} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:brightness-110 active:scale-[0.97] transition-all">
-        Upload Folder →
+    <span className="flex items-center gap-2">
+      API EXHAUSTED. RECOVERY IN: <span className="font-black">{remaining}</span>
+      <button onClick={onFolderClick} className="ml-2 px-3 py-1 bg-yellow-500/20 text-yellow-600 border border-yellow-500/30 text-[9px] uppercase hover:bg-yellow-500/30 transition-colors">
+        INJECT FOLDER
       </button>
-    </div>
+    </span>
   );
 }

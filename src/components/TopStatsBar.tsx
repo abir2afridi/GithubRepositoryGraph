@@ -1,104 +1,157 @@
 import React from 'react';
 import { useStore } from '@/store/useStore';
-import { getFileTypeInfo } from '@/lib/fileIcons';
-import { useNavigate } from 'react-router-dom';
+import { 
+  Search, 
+  Download, 
+  Palette, 
+  Moon, 
+  Sun, 
+  Maximize, 
+  Settings,
+  Cpu,
+  Github,
+  Monitor,
+  Shield,
+} from 'lucide-react';
 
 export function TopStatsBar() {
-  const { project, setSelectedNode, toggleRepoInfo, toggleExport, toggleSearch, togglePresentation, theme, setTheme } = useStore();
-  const navigate = useNavigate();
+  const { 
+    project, 
+    toggleRepoInfo, 
+    toggleExport, 
+    toggleSearch, 
+    theme, 
+    setTheme,
+    toggleCustomization
+  } = useStore();
+  
   if (!project) return null;
 
   const meta = project.repoMeta;
-  const unresolvedCount = project.dependencies.filter(d => !d.resolved && !d.isExternal).length;
-  const langs = [...new Set(project.files.filter(f => !f.isBinary).map(f => f.language))].slice(0, 6);
-
-  const formatNum = (n: number) => {
-    if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
-    return String(n);
-  };
 
   const nextTheme = () => {
-    const themes: typeof theme[] = ['dark', 'light', 'neon', 'blueprint', 'pastel', 'blood', 'forest'];
+    const themes: typeof theme[] = [
+      'dark', 'light', 'neon', 'blueprint', 'pastel', 'blood', 'forest',
+      'sunset', 'electric', 'midnight', 'matrix', 'cyber', 'drift', 'arctic', 'desert', 'lava', 'void'
+    ];
     const idx = themes.indexOf(theme);
     setTheme(themes[(idx + 1) % themes.length]);
   };
 
+  const toggleLightDark = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+
   return (
-    <div className="h-11 bg-card/90 backdrop-blur-sm border-b border-border flex items-center px-4 gap-3 text-xs z-30 flex-shrink-0">
-      {/* Left: Logo */}
-      <span className="font-display font-extrabold text-sm text-gradient tracking-tight mr-1">RepoGraph</span>
-      <div className="w-px h-5 bg-border" />
+    <div className="h-16 bg-card/80 backdrop-blur-xl border-b border-border/60 px-8 text-xs z-50 flex-shrink-0 relative overflow-hidden flex items-center justify-between">
+      
+      {/* Precision Scanline Effect */}
+      <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(var(--primary),0.02)_1px,transparent_1px)] bg-[length:100%_4px] opacity-20 animate-scanline" />
+      
+      {/* Cybernetic Accent Line */}
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-primary/10 via-transparent to-primary/10" />
 
-      {/* Repo info */}
-      {meta ? (
-        <button onClick={toggleRepoInfo} className="flex items-center gap-2 hover:bg-secondary/50 rounded-lg px-2 py-1 transition-all active:scale-[0.98]">
-          <img src={meta.ownerAvatar} alt={meta.owner} className="w-5 h-5 rounded-full ring-1 ring-border" />
-          <span className="font-mono text-foreground/90 font-medium">{meta.fullName}</span>
-          <span className="text-muted-foreground/40">↗</span>
-        </button>
-      ) : (
-        <span className="font-display font-bold text-foreground tracking-tight flex items-center gap-1.5">
-          📁 {project.name}
-        </span>
-      )}
-
-      {/* GitHub badges */}
-      {meta && (
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <span className="flex items-center gap-0.5" title="Stars">⭐ {formatNum(meta.stars)}</span>
-          <span className="flex items-center gap-0.5" title="Forks">🍴 {formatNum(meta.forks)}</span>
-          <span className="flex items-center gap-0.5" title="Open Issues">🐛 {formatNum(meta.openIssues)}</span>
+      {/* 01: ENGINE IDENTITY (LEFT) */}
+      <div className="flex items-center gap-4 flex-1">
+        <div className="relative group cursor-pointer" onClick={() => window.location.reload()}>
+          <div className="w-10 h-10 rounded-sm border border-primary/30 flex items-center justify-center bg-primary/5 group-hover:bg-primary/10 transition-colors">
+            <Cpu className="w-5 h-5 text-primary" />
+          </div>
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-card animate-pulse shadow-[0_0_8px_rgba(var(--success),0.5)]" />
         </div>
-      )}
-
-      <div className="w-px h-5 bg-border" />
-
-      {/* Stats */}
-      <div className="flex items-center gap-3 text-muted-foreground">
-        <span><span className="text-foreground font-mono font-semibold">{project.files.length}</span> files</span>
-        <span><span className="text-foreground font-mono font-semibold">{project.dependencies.length}</span> deps</span>
-        <span><span className="text-foreground font-mono font-semibold">{project.entryPoints.length}</span> entry</span>
+        <div className="flex flex-col -space-y-1">
+          <span className="font-sans font-black text-lg uppercase tracking-tight text-foreground">REPOGRAPHP</span>
+          <div className="flex items-center gap-1.5 opacity-40">
+             <span className="text-[9px] font-mono font-bold tracking-widest text-primary">v3.4.0</span>
+          </div>
+        </div>
       </div>
 
-      <div className="flex-1" />
+      {/* 02: REPOSITORY IDENTITY (MIDDLE - ABSOLUTE CENTER) */}
+      <div className="absolute left-1/2 -translate-x-1/2 flex justify-center items-center h-full">
+        <button 
+          onClick={toggleRepoInfo}
+          className="flex items-center gap-3 px-8 h-full hover:bg-primary/5 transition-all group relative"
+        >
+          {/* Vertical Separators */}
+          <div className="absolute left-0 top-1/3 bottom-1/3 w-[1px] bg-border/20" />
+          <div className="absolute right-0 top-1/3 bottom-1/3 w-[1px] bg-border/20" />
 
-      {/* Language badges */}
-      <div className="flex gap-1 mr-2">
-        {langs.map((l, i) => {
-          const ext = project.files.find(f => f.language === l)?.extension || '';
-          const info = getFileTypeInfo(ext);
-          return (
-            <span key={i} className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium"
-              style={{ backgroundColor: info.color + '15', color: info.color }}>
-              {l}
-            </span>
-          );
-        })}
-      </div>
+          {/* Repository Owner Photo */}
+          <div className="relative">
+            <div className="w-8 h-8 rounded-full overflow-hidden border border-border/40 group-hover:border-primary/50 transition-colors bg-card/60 shadow-sm relative z-10">
+              {meta?.ownerAvatar ? (
+                <img src={meta.ownerAvatar} alt={meta.owner} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-primary/40">
+                  {project.source === 'github' ? <Github className="w-4 h-4" /> : <Monitor className="w-4 h-4" />}
+                </div>
+              )}
+            </div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-card p-0.5 border border-border/40 shadow-sm z-20">
+                {project.source === 'github' ? <Github className="w-full h-full text-primary/60" /> : <Monitor className="w-full h-full text-foreground/40" />}
+            </div>
+          </div>
 
-      {unresolvedCount > 0 && (
-        <button className="px-2 py-0.5 bg-destructive/10 text-destructive rounded text-[10px] font-medium hover:bg-destructive/20 active:scale-95 transition-all">
-          ⚠️ {unresolvedCount}
+          <div className="flex flex-col items-start gap-0">
+             <div className="flex items-center gap-1.5 opacity-40">
+                <span className="text-[9px] font-mono font-black text-foreground uppercase tracking-[0.1em] leading-none">
+                   @{meta?.owner || 'LOCAL_OS'}
+                </span>
+             </div>
+             <span className="text-lg font-black text-foreground uppercase tracking-tighter leading-none group-hover:text-primary transition-colors">
+               {meta?.repoName || project.name.split('/').pop()}
+             </span>
+          </div>
         </button>
-      )}
-
-      {/* Actions */}
-      <div className="flex items-center gap-0.5">
-        <button onClick={toggleSearch} title="Search (Ctrl+F)" className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-secondary text-muted-foreground hover:text-foreground transition-all">🔍</button>
-        {meta && (
-          <button onClick={() => navigate('/download')} title="Download ZIP"
-            className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-secondary text-muted-foreground hover:text-foreground transition-all text-xs">⬇</button>
-        )}
-        <button onClick={toggleExport} title="Export (Ctrl+E)" className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-secondary text-muted-foreground hover:text-foreground transition-all">📤</button>
-        <button onClick={togglePresentation} title="Present (P)" className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-secondary text-muted-foreground hover:text-foreground transition-all">🖥️</button>
-        <button onClick={nextTheme} title="Theme" className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-secondary text-muted-foreground hover:text-foreground transition-all">
-          {theme === 'dark' ? '🌙' : theme === 'light' ? '☀️' : '🎨'}
-        </button>
       </div>
 
-      <span className="px-2 py-0.5 bg-secondary rounded text-[10px] font-medium">
-        {project.source === 'github' ? '🐙 GitHub' : '📁 Local'}
-      </span>
+      {/* 03: MODULAR CONTROL INTERFACE (RIGHT) */}
+      <div className="flex items-center gap-4 flex-1 justify-end">
+        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 border border-border/40 bg-secondary/5 rounded-sm">
+           <Shield className="w-3.5 h-3.5 text-primary/40" />
+           <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-primary/60 truncate">Protocol::Secure.v2</span>
+        </div>
+
+        <div className="flex items-center bg-secondary/20 border border-border/40 rounded-sm p-1 gap-1">
+          <button onClick={toggleSearch} title="Search Index (Ctrl+K)" 
+            className="w-9 h-9 flex items-center justify-center hover:bg-primary/20 text-foreground hover:text-primary transition-all rounded-sm border border-transparent hover:border-primary/20">
+            <Search className="w-4 h-4" />
+          </button>
+          
+          <button onClick={toggleExport} title="Export Architecture (Ctrl+E)" 
+            className="w-9 h-9 flex items-center justify-center hover:bg-primary/20 text-foreground hover:text-primary transition-all rounded-sm border border-transparent hover:border-primary/20">
+            <Download className="w-4 h-4" />
+          </button>
+
+          <div className="w-[1px] h-4 bg-border/20 mx-1" />
+
+          <button onClick={toggleLightDark} title={`Photometric_State: ${theme === 'light' ? 'Dark' : 'Light'}`}
+            className="w-9 h-9 flex items-center justify-center hover:bg-primary/20 text-primary transition-all rounded-sm border border-transparent hover:border-primary/20">
+            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+          </button>
+
+          <button onClick={nextTheme} title="Protocol_Visual_Rotation" 
+            className="w-9 h-9 flex items-center justify-center hover:bg-primary/20 text-foreground hover:text-primary transition-all rounded-sm border border-transparent hover:border-primary/20">
+            <Palette className="w-4 h-4" />
+          </button>
+
+          <button onClick={toggleCustomization} title="Engine_Subsystems" 
+            className="w-9 h-9 flex items-center justify-center hover:bg-primary/20 text-foreground hover:text-primary transition-all rounded-sm border border-transparent hover:border-primary/20">
+            <Settings className="w-4 h-4" />
+          </button>
+        </div>
+
+        <button 
+          onClick={() => useStore.getState().togglePresentation()} 
+          title="Projection_Mode [P]"
+          className="group relative w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 transition-all rounded-sm overflow-hidden flex-shrink-0"
+        >
+          <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:250%_250%] group-hover:animate-shimmer" />
+          <Maximize className="w-4.5 h-4.5 relative z-10" />
+        </button>
+      </div>
     </div>
   );
 }
