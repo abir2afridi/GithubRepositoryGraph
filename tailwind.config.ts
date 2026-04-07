@@ -1,0 +1,90 @@
+import type { Config } from "tailwindcss";
+
+export default {
+  darkMode: ["class"],
+  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  prefix: "",
+  theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: { "2xl": "1400px" },
+    },
+    extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Syne', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: { DEFAULT: "hsl(var(--primary))", foreground: "hsl(var(--primary-foreground))" },
+        secondary: { DEFAULT: "hsl(var(--secondary))", foreground: "hsl(var(--secondary-foreground))" },
+        destructive: { DEFAULT: "hsl(var(--destructive))", foreground: "hsl(var(--destructive-foreground))" },
+        muted: { DEFAULT: "hsl(var(--muted))", foreground: "hsl(var(--muted-foreground))" },
+        accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
+        popover: { DEFAULT: "hsl(var(--popover))", foreground: "hsl(var(--popover-foreground))" },
+        card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+        },
+        graph: {
+          bg: "hsl(var(--graph-bg))",
+          grid: "hsl(var(--graph-grid))",
+        },
+        node: {
+          bg: "hsl(var(--node-bg))",
+          border: "hsl(var(--node-border))",
+          selected: "hsl(var(--node-selected))",
+        },
+        edge: {
+          import: "hsl(var(--edge-import))",
+          html: "hsl(var(--edge-html))",
+          css: "hsl(var(--edge-css))",
+          default: "hsl(var(--edge-default))",
+        },
+        lang: {
+          ts: "hsl(var(--lang-ts))",
+          js: "hsl(var(--lang-js))",
+          html: "hsl(var(--lang-html))",
+          css: "hsl(var(--lang-css))",
+          json: "hsl(var(--lang-json))",
+          py: "hsl(var(--lang-py))",
+          php: "hsl(var(--lang-php))",
+          vue: "hsl(var(--lang-vue))",
+          svelte: "hsl(var(--lang-svelte))",
+          md: "hsl(var(--lang-md))",
+          image: "hsl(var(--lang-image))",
+          other: "hsl(var(--lang-other))",
+        },
+        warn: { DEFAULT: "hsl(var(--amber-warn))", foreground: "hsl(var(--amber-warn-foreground))" },
+        success: "hsl(var(--success))",
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      keyframes: {
+        "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
+        "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate")],
+} satisfies Config;
