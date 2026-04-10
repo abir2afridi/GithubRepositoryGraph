@@ -2,6 +2,7 @@ import React, { useMemo, useCallback, useEffect, useState } from 'react';
 import ReactFlow, {
   Node, Edge, Background, MiniMap, useNodesState, useEdgesState,
   BackgroundVariant, NodeProps, Handle, Position, useReactFlow, ReactFlowProvider,
+  getBezierPath, getSmoothStepPath, EdgeProps,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useStore } from '@/store/useStore';
@@ -29,7 +30,7 @@ function FileNodeComponent({ data, selected }: NodeProps) {
 
   return (
     <div
-      className={`group relative px-3 py-2.5 rounded-lg border transition-all duration-200 cursor-pointer min-w-[140px] max-w-[220px] ${selected
+      className={`group relative px-4 py-3 rounded-lg border transition-all duration-200 cursor-pointer min-w-[220px] max-w-[340px] shadow-sm ${selected
         ? 'border-node-selected glow-primary-sm bg-node-bg scale-[1.04]'
         : isDimmed
           ? 'border-node-border/40 bg-node-bg/50 opacity-35'
@@ -39,8 +40,8 @@ function FileNodeComponent({ data, selected }: NodeProps) {
       onContextMenu={handleContextMenu}
     >
       <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-primary/80 !border-0 !-top-1" />
-      <div className="flex items-center gap-2.5">
-        <span className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105 ${info.iconUrl ? '' : 'text-[8px] font-mono font-bold border border-white/5'}`}
+      <div className="flex items-center gap-3">
+        <span className={`w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105 ${info.iconUrl ? '' : 'text-sm font-mono font-bold border border-white/5'}`}
           style={info.iconUrl ? {} : {
             backgroundColor: `hsl(var(--${info.colorVar}) / 0.15)`,
             color: `hsl(var(--${info.colorVar}))`
@@ -52,27 +53,27 @@ function FileNodeComponent({ data, selected }: NodeProps) {
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="text-xs font-medium truncate text-foreground flex items-center gap-1">
-            {data.isEntryPoint && <span className="text-primary animate-pulse-ring" title="Entry Point"><Zap className="w-2.5 h-2.5 fill-current" /></span>}
-            {data.isOrphan && <span className="text-muted-foreground/30" title="Orphan file"><MoreHorizontal className="w-2.5 h-2.5" /></span>}
-            {data.isTest && <span className="text-accent" title="Test file"><ShieldCheck className="w-2.5 h-2.5" /></span>}
-            {data.isConfig && <span className="text-muted-foreground/60" title="Config file"><Settings2 className="w-2.5 h-2.5" /></span>}
+          <div className="text-sm font-bold truncate text-foreground flex items-center gap-1.5">
+            {data.isEntryPoint && <span className="text-primary animate-pulse-ring" title="Entry Point"><Zap className="w-3.5 h-3.5 fill-current" /></span>}
+            {data.isOrphan && <span className="text-muted-foreground/30" title="Orphan file"><MoreHorizontal className="w-3.5 h-3.5" /></span>}
+            {data.isTest && <span className="text-accent" title="Test file"><ShieldCheck className="w-3.5 h-3.5" /></span>}
+            {data.isConfig && <span className="text-muted-foreground/80" title="Config file"><Settings2 className="w-3.5 h-3.5" /></span>}
             {data.name}
-            {data.fileOrder && <span className="text-[9px] text-muted-foreground/40 font-mono ml-1">#{data.fileOrder}</span>}
+            {data.fileOrder && <span className="text-[10px] bg-foreground/10 text-foreground px-1.5 py-0.5 rounded font-mono font-black ml-1.5 shadow-sm">#{data.fileOrder}</span>}
           </div>
           {data.folderPath && (
-            <div className="text-[9px] text-muted-foreground/40 font-mono truncate">{data.folderPath}</div>
+            <div className="text-[11px] text-muted-foreground/80 font-mono truncate mt-0.5">{data.folderPath}</div>
           )}
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 font-mono mt-0.5">
+          <div className="flex items-center gap-3 text-xs text-foreground/90 font-mono font-bold mt-1">
             <span>{formatSize(data.size)}</span>
-            {data.importCount > 0 && <span className="text-primary/60">↓{data.importCount}</span>}
-            {data.usedByCount > 0 && <span className="text-accent/60">↑{data.usedByCount}</span>}
+            {data.importCount > 0 && <span className="text-primary">↓{data.importCount}</span>}
+            {data.usedByCount > 0 && <span className="text-accent">↑{data.usedByCount}</span>}
           </div>
         </div>
         {data.complexityLevel && (
-          <span className={`text-[8px] font-bold px-1 py-0.5 rounded ${data.complexityLevel === 'Critical' ? 'bg-destructive/20 text-destructive' :
-            data.complexityLevel === 'High' ? 'bg-warn/20 text-warn' :
-              data.complexityLevel === 'Medium' ? 'bg-warn/10 text-warn/60' : 'bg-success/10 text-success/60'
+          <span title={`Complexity: ${data.complexityLevel}`} className={`text-xs font-black px-2 py-0.5 rounded ${data.complexityLevel === 'Critical' ? 'bg-destructive/30 text-destructive' :
+            data.complexityLevel === 'High' ? 'bg-warn/30 text-warn' :
+              data.complexityLevel === 'Medium' ? 'bg-warn/20 text-warn' : 'bg-success/20 text-success'
             }`}>{data.complexityLevel[0]}</span>
         )}
       </div>
@@ -81,7 +82,66 @@ function FileNodeComponent({ data, selected }: NodeProps) {
   );
 }
 
+function ChainEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style }: EdgeProps) {
+  const { layout } = useStore();
+  const [edgePath] = layout === 'hierarchy' 
+    ? getSmoothStepPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition })
+    : getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition });
+
+  // Extract only color and opacity from style — do NOT spread style directly,
+  // because it contains strokeWidth/strokeDasharray that override our custom layers.
+  const baseColor = (style as React.CSSProperties)?.stroke || 'hsl(var(--edge-import))';
+  const baseOpacity = (style as React.CSSProperties)?.opacity ?? 0.8;
+
+  return (
+    <g className="chain-edge-group">
+      {/* 1. Main Link Bodies (Top and Bottom of the link) */}
+      <path d={edgePath} fill="none"
+        stroke={baseColor as string} strokeWidth={4} strokeLinecap="round"
+        strokeDasharray="12 10" strokeDashoffset={0} opacity={Number(baseOpacity)}
+        className="chain-active" />
+
+      {/* 2. Hollow Center (Punch-out) */}
+      <path d={edgePath} fill="none"
+        stroke="hsl(var(--background))" strokeWidth={2.4} strokeLinecap="round"
+        strokeDasharray="10 12" strokeDashoffset={1} opacity={1}
+        className="chain-active" />
+
+      {/* 3a. Spiral Core 1 */}
+      <path d={edgePath} fill="none"
+        stroke="hsl(var(--primary))" strokeWidth={1} strokeLinecap="round"
+        strokeDasharray="4 18" strokeDashoffset={0} opacity={0.8}
+        className="chain-spiral-core" />
+
+      {/* 3b. Spiral Core 2 */}
+      <path d={edgePath} fill="none"
+        stroke="hsl(var(--accent))" strokeWidth={1} strokeLinecap="round"
+        strokeDasharray="4 18" strokeDashoffset={11} opacity={0.6}
+        className="chain-spiral-core" />
+
+      {/* 4. Interlocking Side-Connectors */}
+      <path d={edgePath} fill="none"
+        stroke={baseColor as string} strokeWidth={2.2} strokeLinecap="round"
+        strokeDasharray="4 18" strokeDashoffset={11} opacity={Number(baseOpacity) * 0.8}
+        className="chain-active" />
+
+      {/* 5. Connector Hollows */}
+      <path d={edgePath} fill="none"
+        stroke="hsl(var(--background))" strokeWidth={0.8} strokeLinecap="round"
+        strokeDasharray="2 20" strokeDashoffset={12} opacity={1}
+        className="chain-active" />
+
+      {/* 6. Highlights / Metallic Shine */}
+      <path id={id} d={edgePath} fill="none"
+        stroke="white" strokeWidth={0.8} strokeLinecap="round"
+        strokeDasharray="12 10" strokeDashoffset={0} opacity={0.25}
+        className="react-flow__edge-path chain-active" />
+    </g>
+  );
+}
+
 const nodeTypes = { fileNode: FileNodeComponent };
+const edgeTypes = { chain: ChainEdge };
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return bytes + ' B';
@@ -430,13 +490,15 @@ function GraphViewInner() {
           id: `e-${i}`,
           source: d.source,
           target: d.target,
-          type: edgeStyle === 'step' ? 'smoothstep' : edgeStyle === 'straight' ? 'straight' : 'default',
-          animated: edgeStyle === 'animated-dots',
+          type: edgeStyle === 'chain' ? 'chain' : edgeStyle === 'step' ? 'smoothstep' : edgeStyle === 'straight' ? 'straight' : 'default',
+          animated: edgeStyle === 'animated-dots' || edgeStyle === 'chain',
+          className: edgeStyle === 'chain' ? 'chain-active' : '',
           style: {
             stroke: isHighlighted ? 'hsl(var(--primary))' : d.type === 'html' ? 'hsl(25, 90%, 55%)' : d.type === 'css' ? 'hsl(210, 90%, 55%)' : 'hsl(var(--edge-import))',
             strokeWidth: isHighlighted ? edgeThickness + 1 : edgeThickness,
             opacity: selectedNode ? (isHighlighted ? 1 : 0.08) : edgeOpacity / 100,
             transition: 'opacity 0.3s, stroke-width 0.2s',
+            strokeDasharray: edgeStyle === 'chain' ? '12 3' : undefined,
           },
         };
       });
@@ -530,11 +592,17 @@ function GraphViewInner() {
         onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick} onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView minZoom={0.05} maxZoom={3}
-        className="bg-graph"
+        className={`bg-graph ${bgPattern === 'hex' ? 'graph-bg-hex' : bgPattern === 'solid' ? 'graph-bg-noise' : ''}`}
         proOptions={{ hideAttribution: true }}>
-        {bgPattern !== 'solid' && bgPattern !== 'hex' && (
-          <Background variant={bgVariant} gap={20} size={1} color="hsl(var(--graph-grid))" />
+        {bgPattern !== 'solid' && bgPattern !== 'hex' && bgPattern !== 'none' && (
+          <Background 
+            variant={bgVariant} 
+            gap={bgPattern === 'cross' ? 80 : 20} 
+            size={bgPattern === 'dots' ? 2 : bgPattern === 'cross' ? 2 : 1} 
+            color={bgPattern === 'cross' ? 'hsl(var(--primary) / 0.3)' : 'hsl(var(--graph-grid))'} 
+          />
         )}
         <MiniMap
           nodeColor={(n) => getFileTypeInfo(n.data?.extension || '').color}
@@ -543,6 +611,7 @@ function GraphViewInner() {
           className="!bg-surface-overlay !border !border-border"
         />
       </ReactFlow>
+
       <button onClick={handleFitView} title="Fit to view (Ctrl+Shift+F)"
         className="absolute bottom-4 right-[180px] z-20 w-8 h-8 rounded-lg bg-card/90 backdrop-blur border border-border flex items-center justify-center text-xs text-muted-foreground hover:text-foreground hover:border-muted-foreground active:scale-95 transition-all shadow-sm">
         ⊡

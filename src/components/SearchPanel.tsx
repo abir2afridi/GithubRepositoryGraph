@@ -11,10 +11,30 @@ export function SearchPanel({ onClose }: SearchPanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const { project, openCodeView, setSelectedNode } = useStore();
 
-  const results = useMemo(() => {
-    if (!searchQuery || searchQuery.length < 2 || !project) return [];
+  type SearchResult = NonNullable<typeof project>['files'][0] & { order?: number };
+
+  const results = useMemo((): SearchResult[] => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query || !project) return [];
     
-    const query = searchQuery.toLowerCase();
+    // Numeric search detection (if starts with # or is purely numeric)
+    const isNumeric = query.startsWith('#') || !isNaN(Number(query));
+    const cleanQuery = query.startsWith('#') ? query.slice(1) : query;
+
+    if (isNumeric && project.fileOrder) {
+      const fileEntries = Array.from(project.fileOrder.entries());
+      return fileEntries
+        .filter(([path, order]) => order.toString().includes(cleanQuery))
+        .slice(0, 15)
+        .map(([path, order]) => ({
+             ...project.files.find(f => f.path === path)!,
+             order
+        }))
+        .filter(f => f.name !== undefined);
+    }
+
+    if (query.length < 2) return [];
+
     return project.files.filter(f => 
       f.name.toLowerCase().includes(query) || 
       f.path.toLowerCase().includes(query)
@@ -32,21 +52,23 @@ export function SearchPanel({ onClose }: SearchPanelProps) {
   if (!project) return null;
 
   return (
-    <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4 pointer-events-none">
-      <div className="bg-card/90 backdrop-blur-2xl border border-border/60 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] pointer-events-auto overflow-hidden">
-        <div className="relative group">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-primary animate-pulse" />
+    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-full max-w-2xl px-4 pointer-events-none animate-in fade-in slide-in-from-bottom-8 duration-300">
+      <div className="bg-card/95 backdrop-blur-3xl border border-primary/20 shadow-[0_40px_100px_rgba(0,0,0,0.6)] pointer-events-auto overflow-hidden rounded-sm">
+        <div className="relative group bg-primary/5">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-primary" />
           <input
             autoFocus
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="ACCESS_NODE::[FILE_PATH_OR_SYMBOL]..."
-            className="w-full bg-transparent pl-16 pr-24 py-6 text-sm font-mono tracking-widest text-foreground placeholder:text-muted-foreground/20 focus:outline-none"
+            placeholder="TYPE #123 FOR SERIAL OR PATH::[NAME]..."
+            className="w-full bg-transparent pl-16 pr-32 py-5 text-sm font-mono tracking-widest text-foreground placeholder:text-foreground/20 focus:outline-none"
           />
           <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-4">
-            <span className="brutalist-label text-muted-foreground/30 hidden sm:block">Searching::{results.length} Nodes</span>
-            <button onClick={onClose} className="p-2 hover:bg-destructive/10 hover:text-destructive group transition-all">
+            <span className="text-[10px] font-black font-mono text-primary/40 uppercase tracking-widest hidden sm:block">
+              {results.length > 0 ? `NODES::FOUND[${results.length}]` : 'SCANNING_INDEX'}
+            </span>
+            <button onClick={onClose} className="p-2 hover:bg-destructive/10 hover:text-destructive group transition-all rounded-xs">
                 <X className="w-4 h-4 text-muted-foreground group-hover:text-destructive transition-colors" />
             </button>
           </div>
@@ -73,8 +95,8 @@ export function SearchPanel({ onClose }: SearchPanelProps) {
                     </div>
                     <div className="text-xs font-mono text-muted-foreground/70 truncate tracking-tight">{file.path}</div>
                   </div>
-                  <div className="text-[10px] font-black text-muted-foreground/20 flex flex-col items-end gap-1">
-                    <span className="group-hover:text-primary transition-colors">#{project.fileOrder?.get(file.path) || '?'}</span>
+                   <div className="text-[10px] font-black text-primary/30 flex flex-col items-end gap-1 font-mono">
+                    <span>#{project.fileOrder?.get(file.path) || file.order || '?'}</span>
                     <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </button>

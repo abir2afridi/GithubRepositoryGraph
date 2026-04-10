@@ -53,6 +53,7 @@ const EDGE_STYLES: { id: EdgeStyle; label: string; desc: string }[] = [
   { id: 'straight', label: 'Straight Line', desc: 'Direct mapping' },
   { id: 'step', label: 'Orchestrated', desc: 'Clean right-angles' },
   { id: 'animated-dots', label: 'Pulse Flow', desc: 'Active data packets' },
+  { id: 'chain', label: 'Kinetic Chain', desc: 'Interlocked units' },
 ];
 
 const LAYOUTS: { id: LayoutId; label: string; desc: string }[] = [
@@ -64,6 +65,7 @@ const LAYOUTS: { id: LayoutId; label: string; desc: string }[] = [
 ];
 
 const BG_PATTERNS: { id: BgPattern; label: string }[] = [
+  { id: 'none', label: 'Protocol 0' },
   { id: 'dots', label: 'Protocol A' },
   { id: 'lines', label: 'Protocol B' },
   { id: 'cross', label: 'Protocol C' },
@@ -96,7 +98,7 @@ export function CustomizationPanel() {
               <Settings className="w-3.5 h-3.5 text-primary" />
               Protocol::Configure
             </h3>
-            <p className="text-[9px] text-primary font-mono font-bold uppercase tracking-[0.25em] opacity-80">
+            <p className="text-xs text-primary font-mono font-bold uppercase tracking-[0.2em] opacity-90">
               Visual Engine Parameters
             </p>
           </div>
@@ -118,10 +120,10 @@ export function CustomizationPanel() {
           <button 
             key={t.id} 
             onClick={() => setTab(t.id as 'theme' | 'edges' | 'shapes' | 'layout')}
-            className={`flex-1 py-2 rounded-sm flex flex-col items-center gap-1 transition-all ${tab === t.id ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'text-muted-foreground hover:bg-primary/5 hover:text-primary'}`}
+            className={`flex-1 py-3 rounded-sm flex flex-col items-center gap-2 transition-all ${tab === t.id ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'text-foreground/80 hover:bg-primary/10 hover:text-primary'}`}
           >
-            <t.icon className="w-3.5 h-3.5" />
-            <span className="text-[8px] uppercase font-black tracking-widest">{t.label}</span>
+            <t.icon className="w-4 h-4" />
+            <span className="text-[11px] uppercase font-black tracking-widest">{t.label}</span>
           </button>
         ))}
       </div>
@@ -132,16 +134,16 @@ export function CustomizationPanel() {
         {tab === 'theme' && (
           <div className="space-y-6">
             <div className="space-y-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Activity className="w-3 h-3 text-primary" />
-                <label className="text-[10px] uppercase font-black tracking-[0.2em] text-foreground">Visual Protocols</label>
+              <div className="flex items-center gap-2 mb-2">
+                <Activity className="w-4 h-4 text-primary" />
+                <label className="text-xs uppercase font-black tracking-[0.1em] text-foreground">Visual Protocols</label>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {THEMES.map(t => (
                   <button key={t.id} onClick={() => setTheme(t.id)}
-                    className={`group relative p-3 rounded-sm border transition-all flex items-center gap-3 ${theme === t.id ? 'bg-primary/10 border-primary shadow-lg' : 'bg-transparent border-border/40 hover:border-primary/40 hover:bg-primary/5'}`}>
-                    <div className="w-3 h-3 rounded-full border border-border shadow-[0_0_8px_rgba(var(--primary),0.5)]" style={{ backgroundColor: t.color }} />
-                    <span className={`text-[10px] font-bold uppercase tracking-wider ${theme === t.id ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`}>{t.label}</span>
+                    className={`group relative p-3 rounded-sm border transition-all flex items-center gap-3 ${theme === t.id ? 'bg-primary/10 border-primary shadow-lg' : 'bg-transparent border-border/60 hover:border-primary/60 hover:bg-primary/10'}`}>
+                    <div className="w-4 h-4 rounded-full border border-border shadow-[0_0_8px_rgba(var(--primary),0.5)]" style={{ backgroundColor: t.color }} />
+                    <span className={`text-xs font-bold uppercase tracking-wider ${theme === t.id ? 'text-primary' : 'text-foreground/80 group-hover:text-foreground'}`}>{t.label}</span>
                     {theme === t.id && <div className="absolute inset-0 border-2 border-primary/20 animate-pulse pointer-events-none" />}
                   </button>
                 ))}
@@ -149,14 +151,14 @@ export function CustomizationPanel() {
             </div>
             
             <div className="space-y-3">
-               <div className="flex items-center gap-2 mb-1">
-                <LayoutIcon className="w-3 h-3 text-primary" />
-                <label className="text-[10px] uppercase font-black tracking-[0.2em] text-foreground">Grid Architecture</label>
+              <div className="flex items-center gap-2 mb-2">
+                <LayoutIcon className="w-4 h-4 text-primary" />
+                <label className="text-xs uppercase font-black tracking-[0.1em] text-foreground">Grid Architecture</label>
               </div>
-              <div className="grid grid-cols-5 gap-1.5">
+              <div className="grid grid-cols-5 gap-2">
                 {BG_PATTERNS.map(p => (
                   <button key={p.id} onClick={() => setBgPattern(p.id)}
-                    className={`aspect-square rounded-sm flex items-center justify-center text-[9px] uppercase font-black transition-all border ${bgPattern === p.id ? 'bg-primary border-primary text-primary-foreground' : 'bg-secondary/10 border-border/40 text-muted-foreground hover:bg-secondary/20 hover:text-foreground'}`}>
+                    className={`aspect-square rounded-sm flex items-center justify-center text-[11px] uppercase font-black transition-all border ${bgPattern === p.id ? 'bg-primary border-primary text-primary-foreground' : 'bg-secondary/20 border-border/60 text-foreground/80 hover:bg-secondary/40 hover:text-foreground'}`}>
                     {p.label.split(' ')[1]}
                   </button>
                 ))}
@@ -168,13 +170,13 @@ export function CustomizationPanel() {
         {tab === 'edges' && (
           <div className="space-y-6">
             <div className="space-y-3">
-              <label className="text-[10px] uppercase font-black tracking-[0.2em] text-foreground">Mapping Algorithm</label>
+              <label className="text-xs uppercase font-black tracking-[0.1em] text-foreground">Mapping Algorithm</label>
               <div className="space-y-2">
                 {EDGE_STYLES.map(e => (
                   <button key={e.id} onClick={() => setEdgeStyle(e.id)}
                     className={`w-full group text-left px-4 py-3 rounded-sm border transition-all flex flex-col gap-0.5 ${edgeStyle === e.id ? 'bg-primary/10 border-primary shadow-md' : 'bg-transparent border-border/40 hover:border-primary/40'}`}>
-                    <span className={`text-[10px] font-black uppercase tracking-widest ${edgeStyle === e.id ? 'text-primary' : 'text-foreground'}`}>{e.label}</span>
-                    <span className="text-[9px] text-muted-foreground font-mono opacity-60 uppercase">{e.desc}</span>
+                    <span className={`text-xs font-black uppercase tracking-widest ${edgeStyle === e.id ? 'text-primary' : 'text-foreground'}`}>{e.label}</span>
+                    <span className="text-[11px] text-foreground/60 font-mono uppercase">{e.desc}</span>
                   </button>
                 ))}
               </div>
@@ -183,8 +185,8 @@ export function CustomizationPanel() {
             <div className="space-y-5 px-1 pt-2">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-[9px] uppercase font-black tracking-[0.2em] text-muted-foreground">Vector Intensity</label>
-                  <span className="text-[10px] font-mono text-primary font-black">{edgeOpacity}%</span>
+                  <label className="text-[11px] uppercase font-black tracking-[0.1em] text-foreground/80">Vector Intensity</label>
+                  <span className="text-xs font-mono text-primary font-black">{edgeOpacity}%</span>
                 </div>
                 <div className="h-1.5 w-full bg-secondary/20 rounded-full overflow-hidden flex items-center group cursor-pointer">
                    <input type="range" min={20} max={100} value={edgeOpacity} onChange={e => setEdgeOpacity(Number(e.target.value))} className="w-full h-full accent-primary bg-transparent appearance-none" />
@@ -193,8 +195,8 @@ export function CustomizationPanel() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-[9px] uppercase font-black tracking-[0.2em] text-muted-foreground">Vector Magnitude</label>
-                  <span className="text-[10px] font-mono text-primary font-black">{edgeThickness}px</span>
+                  <label className="text-[11px] uppercase font-black tracking-[0.1em] text-foreground/80">Vector Magnitude</label>
+                  <span className="text-xs font-mono text-primary font-black">{edgeThickness}px</span>
                 </div>
                  <div className="h-1.5 w-full bg-secondary/20 rounded-full overflow-hidden flex items-center group cursor-pointer">
                     <input type="range" min={1} max={6} value={edgeThickness} onChange={e => setEdgeThickness(Number(e.target.value))} className="w-full h-full accent-primary bg-transparent appearance-none" />
@@ -207,14 +209,14 @@ export function CustomizationPanel() {
         {tab === 'shapes' && (
           <div className="space-y-4">
              <div className="flex items-center gap-2 mb-1">
-                <Shapes className="w-3 h-3 text-primary" />
-                <label className="text-[10px] uppercase font-black tracking-[0.2em] text-foreground">Geometric Primitives</label>
+                <Shapes className="w-4 h-4 text-primary" />
+                <label className="text-xs uppercase font-black tracking-[0.1em] text-foreground">Geometric Primitives</label>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {SHAPES.map(s => (
                 <button key={s.id} onClick={() => setShape(s.id)}
-                  className={`px-3 py-3 rounded-sm border transition-all flex flex-col items-center justify-center gap-2 ${shape === s.id ? 'bg-primary/10 border-primary text-primary shadow-md' : 'bg-transparent border-border/40 text-muted-foreground hover:border-primary/40 hover:text-foreground'}`}>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-center leading-tight">{s.label}</span>
+                  className={`px-3 py-3 rounded-sm border transition-all flex flex-col items-center justify-center gap-2 ${shape === s.id ? 'bg-primary/10 border-primary text-primary shadow-md' : 'bg-transparent border-border/40 text-foreground/80 hover:border-primary/40 hover:text-foreground'}`}>
+                  <span className="text-[11px] font-black uppercase tracking-widest text-center leading-tight">{s.label}</span>
                 </button>
               ))}
             </div>
@@ -224,15 +226,15 @@ export function CustomizationPanel() {
         {tab === 'layout' && (
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-1">
-                <Activity className="w-3 h-3 text-primary" />
-                <label className="text-[10px] uppercase font-black tracking-[0.2em] text-foreground">Coordinate Engine</label>
+                <Activity className="w-4 h-4 text-primary" />
+                <label className="text-xs uppercase font-black tracking-[0.1em] text-foreground">Coordinate Engine</label>
             </div>
             <div className="space-y-2">
               {LAYOUTS.map(l => (
                 <button key={l.id} onClick={() => { setLayout(l.id); setShape('auto'); }}
                   className={`w-full text-left px-4 py-4 rounded-sm border transition-all flex flex-col gap-1 ${layout === l.id && shape === 'auto' ? 'bg-primary/10 border-primary shadow-md' : 'bg-transparent border-border/40 hover:border-primary/40'}`}>
-                  <span className={`text-[10px] font-black uppercase tracking-widest ${layout === l.id && shape === 'auto' ? 'text-primary' : 'text-foreground'}`}>{l.label}</span>
-                  <span className="text-[9px] text-muted-foreground font-mono uppercase opacity-60">{l.desc}</span>
+                  <span className={`text-xs font-black uppercase tracking-widest ${layout === l.id && shape === 'auto' ? 'text-primary' : 'text-foreground'}`}>{l.label}</span>
+                  <span className="text-[11px] text-foreground/60 font-mono uppercase">{l.desc}</span>
                 </button>
               ))}
             </div>
@@ -242,10 +244,10 @@ export function CustomizationPanel() {
 
       {/* Enhanced Footer */}
       <div className="px-6 py-4 bg-secondary/10 border-t border-border/60 flex items-center justify-between">
-        <span className="text-[8px] uppercase font-black tracking-[0.3em] text-muted-foreground/40">Secure Authority Active</span>
+        <span className="text-[10px] uppercase font-black tracking-[0.2em] text-foreground/60">Secure Authority Active</span>
         <div className="flex gap-1">
-          <div className="w-1 h-1 bg-primary rounded-full animate-pulse" />
-          <div className="w-1 h-1 bg-primary/40 rounded-full" />
+          <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+          <div className="w-1.5 h-1.5 bg-primary/40 rounded-full" />
         </div>
       </div>
     </div>

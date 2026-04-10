@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import RepoDetails from "./pages/RepoDetails.tsx";
+import DeveloperProfile from "./pages/DeveloperProfile.tsx";
 import { DownloadPage } from "./components/DownloadPage.tsx";
 
 const queryClient = new QueryClient();
@@ -17,6 +19,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/repo" element={<RepoDetails />} />
+          <Route path="/developer" element={<DeveloperProfile />} />
           <Route path="/download" element={<DownloadPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -136,7 +136,7 @@ export function CodeViewPanel() {
           </div>
         </div>
 
-        <span className="px-2.5 py-1 rounded text-xs font-black font-mono flex-shrink-0 flex items-center gap-1.5 border"
+        <span className="px-3 py-1.5 rounded text-[11px] font-black font-mono flex-shrink-0 flex items-center gap-1.5 border"
           style={{ borderColor: `hsl(var(--${info.colorVar}) / 0.5)`, color: `hsl(var(--${info.colorVar}))` }}>
           {info.iconUrl && <img src={info.iconUrl} alt={info.language} className="w-3.5 h-3.5 object-contain" />}
           <span className="uppercase">{info.language}</span>
@@ -147,8 +147,8 @@ export function CodeViewPanel() {
       </div>
 
       {/* File info bar + Extended Metrics */}
-      <div className="flex flex-col border-b border-border bg-secondary/10 flex-shrink-0">
-         <div className="flex items-center gap-4 px-4 py-3 text-xs font-black uppercase tracking-wider flex-wrap text-foreground border-b border-border/40">
+      <div className="flex flex-col border-b border-indigo-500/20 bg-indigo-500/5 flex-shrink-0">
+         <div className="flex items-center gap-4 px-4 py-3 text-xs font-black uppercase tracking-wider flex-wrap text-foreground border-b border-indigo-500/20">
            {fileOrder && <span className="text-primary bg-primary/10 px-2 py-0.5 border border-primary/20 rounded-sm">ORDER::{fileOrder}</span>}
            <span className="text-foreground/90">{file.name}</span>
            <span className="text-foreground/40">•</span>
@@ -167,7 +167,7 @@ export function CodeViewPanel() {
            </div>
          </div>
          
-         <div className="flex items-center gap-5 px-4 py-3 bg-background/40 border-b border-border/40">
+         <div className="flex items-center gap-5 px-4 py-3 bg-slate-500/5 border-b border-slate-500/20">
             {complexityLevel && (
                <div className="flex items-center gap-2" title="Code Complexity Score">
                   <Activity className={`w-4 h-4 ${complexityLevel.level === 'Critical' ? 'text-destructive' : complexityLevel.level === 'High' ? 'text-warn' : 'text-primary'}`} />
@@ -188,13 +188,28 @@ export function CodeViewPanel() {
               <span className="text-accent font-mono text-sm font-black">↑ {incoming.length} IN</span>
             </div>
          </div>
+
+         <div className="flex flex-col gap-1.5 px-4 py-2.5 bg-secondary/5 border-b border-border/20 text-[10px] font-mono tracking-widest text-foreground/70 shadow-inner">
+            <div className="flex items-center justify-between">
+               <span className="opacity-60">COMPUTATIONAL_WEIGHT:</span>
+               <span className="font-bold text-foreground text-right">{Math.round((file.size / project.files.reduce((a,b)=>a+b.size,0)) * 10000) / 100}% OF ROOT</span>
+            </div>
+            <div className="flex items-center justify-between">
+               <span className="opacity-60">CENTRALITY_INDEX:</span>
+               <span className="font-bold text-foreground text-right">{((incoming.length + outgoing.length) / Math.max(1, project.dependencies.length) * 100).toFixed(2)}% NODE IMPACT</span>
+            </div>
+            <div className="flex items-center justify-between">
+               <span className="opacity-60">IS_BINARY:</span>
+               <span className={`font-bold text-right ${file.isBinary ? 'text-warn' : 'text-success'}`}>{file.isBinary ? 'TRUE' : 'FALSE'}</span>
+            </div>
+         </div>
       </div>
 
       <div className="flex-shrink-0 overflow-y-auto max-h-[50vh] scrollbar-thin flex flex-col">
         {/* Chain position */}
         {chainPath.length > 1 && (
-          <div className="px-4 py-3 border-b border-border/40 bg-secondary/5 flex items-center gap-1.5 overflow-x-auto scrollbar-thin flex-shrink-0">
-            <BarChart className="w-4 h-4 text-foreground/40 mr-1 rotate-90 flex-shrink-0" />
+          <div className="px-4 py-3 border-b border-fuchsia-500/20 bg-fuchsia-500/5 flex items-center gap-1.5 overflow-x-auto scrollbar-thin flex-shrink-0">
+            <BarChart className="w-4 h-4 text-fuchsia-500/40 mr-1 rotate-90 flex-shrink-0" />
             {chainPath.map((p, i) => {
               const order = project.fileOrder?.get(p);
               const name = p.split('/').pop();
@@ -217,15 +232,15 @@ export function CodeViewPanel() {
 
         {/* Code Notes (TODOs, FIXMEs) */}
         {codeNotes.length > 0 && (
-          <div className="border-b border-border flex-shrink-0">
+          <div className="border-b border-amber-500/20 flex-shrink-0">
             <button onClick={() => setShowNotes(!showNotes)}
-              className="w-full text-left px-5 py-3 text-xs uppercase tracking-wider text-foreground bg-warn/10 font-black flex items-center gap-2 hover:bg-warn/20 transition-colors">
-              {showNotes ? <ChevronDown className="w-4 h-4 text-warn" /> : <ChevronRight className="w-4 h-4 text-warn" />}
-              <MessageSquareWarning className="w-4 h-4 text-warn" />
+              className="w-full text-left px-5 py-3 text-xs uppercase tracking-wider text-amber-600 dark:text-amber-500 bg-amber-500/10 font-black flex items-center gap-2 hover:bg-amber-500/20 transition-colors">
+              {showNotes ? <ChevronDown className="w-4 h-4 text-amber-500" /> : <ChevronRight className="w-4 h-4 text-amber-500" />}
+              <MessageSquareWarning className="w-4 h-4 text-amber-500" />
               Source Analysis Notes ({codeNotes.length})
             </button>
             <div className={`overflow-hidden transition-all duration-300 ${showNotes ? 'max-h-[250px] opacity-100' : 'max-h-0 opacity-0'}`}>
-              <div className="overflow-y-auto max-h-[250px] scrollbar-thin bg-background/50 divide-y divide-border/20">
+              <div className="overflow-y-auto max-h-[250px] scrollbar-thin bg-amber-500/5 divide-y divide-amber-500/10">
                 {codeNotes.map((note, i) => (
                   <div key={i} className="px-6 py-3 hover:bg-secondary/10 transition-colors">
                     <div className="flex items-center gap-3 mb-1.5">
@@ -247,19 +262,19 @@ export function CodeViewPanel() {
 
         {/* Import details (collapsible) */}
         {(outgoing.length > 0 || incoming.length > 0) && (
-          <div className="border-b border-border flex-shrink-0">
+          <div className="border-b border-emerald-500/20 flex-shrink-0">
             <button onClick={() => setShowImports(!showImports)}
-              className="w-full text-left px-5 py-3 text-xs uppercase tracking-wider text-foreground bg-secondary/30 font-black flex items-center gap-2 hover:bg-secondary/50 transition-colors">
-              {showImports ? <ChevronDown className="w-4 h-4 text-primary" /> : <ChevronRight className="w-4 h-4" />}
-              <Tag className="w-4 h-4 text-primary" />
+              className="w-full text-left px-5 py-3 text-xs uppercase tracking-wider text-emerald-700 dark:text-emerald-500 bg-emerald-500/10 font-black flex items-center gap-2 hover:bg-emerald-500/20 transition-colors">
+              {showImports ? <ChevronDown className="w-4 h-4 text-emerald-500" /> : <ChevronRight className="w-4 h-4 text-emerald-500" />}
+              <Tag className="w-4 h-4 text-emerald-500" />
               I/O Protocol Details
             </button>
             
             <div className={`overflow-hidden transition-all duration-300 ${showImports ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`} style={{ contentVisibility: showImports ? 'visible' : 'hidden' }}>
-              <div className="overflow-y-auto max-h-[500px] scrollbar-thin bg-background/50">
+              <div className="overflow-y-auto max-h-[500px] scrollbar-thin bg-emerald-500/5">
                 {outgoing.length > 0 && (
                   <div className="mb-2">
-                    <div className="px-5 py-2 text-[11px] font-black uppercase text-foreground/60 bg-secondary/10 tracking-widest border-y border-border/20 sticky top-0 z-10 shadow-sm backdrop-blur-md">↓ {outgoing.length} External Imports (What this file uses)</div>
+                    <div className="px-5 py-2.5 text-xs font-black uppercase text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 tracking-widest border-y border-emerald-500/20 sticky top-0 z-10 shadow-sm backdrop-blur-md">↓ {outgoing.length} External Imports (What this file uses)</div>
                     <div className="divide-y divide-border/10">
                       {outgoing.map((dep, i) => (
                         <div key={i} className="px-5 py-3 hover:bg-secondary/10 transition-colors">
@@ -274,8 +289,8 @@ export function CodeViewPanel() {
                           </div>
                           {dep.raw && (
                             <div className="pl-4 mt-2 border-l-2 border-primary/20 ml-1.5">
-                              <span className="text-[10px] text-primary/70 uppercase font-black block mb-1 tracking-widest">Import Statement:</span>
-                              <div className="text-xs text-foreground/80 bg-background/80 border border-border/30 px-3 py-2 rounded font-mono whitespace-pre-wrap break-all inline-block max-w-full leading-relaxed">
+                              <span className="text-[11px] text-primary/70 uppercase font-black block mb-1 tracking-widest">Import Statement:</span>
+                              <div className="text-sm text-foreground/90 bg-background/80 border border-border/30 px-3 py-2 rounded font-mono whitespace-pre-wrap break-all inline-block max-w-full leading-relaxed">
                                 {dep.raw}
                               </div>
                             </div>
@@ -287,7 +302,7 @@ export function CodeViewPanel() {
                 )}
                 {incoming.length > 0 && (
                   <div>
-                    <div className="px-5 py-2 text-[11px] font-black uppercase text-foreground/60 bg-secondary/10 tracking-widest border-y border-border/20 sticky top-0 z-10 shadow-sm backdrop-blur-md">↑ {incoming.length} Consumers (Who uses this file)</div>
+                    <div className="px-5 py-2.5 text-xs font-black uppercase text-teal-700 dark:text-teal-400 bg-teal-500/10 tracking-widest border-y border-teal-500/20 sticky top-0 z-10 shadow-sm backdrop-blur-md">↑ {incoming.length} Consumers (Who uses this file)</div>
                     <div className="divide-y divide-border/10">
                       {incoming.map((dep, i) => (
                         <div key={i} className="px-5 py-3 hover:bg-secondary/10 transition-colors">
@@ -302,8 +317,8 @@ export function CodeViewPanel() {
                           </div>
                           {dep.raw && (
                             <div className="pl-4 mt-2 border-l-2 border-accent/30 ml-1.5">
-                              <span className="text-[10px] text-accent/70 uppercase font-black block mb-1 tracking-widest">How they import this:</span>
-                              <div className="text-xs text-foreground/80 bg-background/80 border border-border/30 px-3 py-2 rounded font-mono whitespace-pre-wrap break-all inline-block max-w-full leading-relaxed">
+                              <span className="text-[11px] text-accent/70 uppercase font-black block mb-1 tracking-widest">How they import this:</span>
+                              <div className="text-sm text-foreground/90 bg-background/80 border border-border/30 px-3 py-2 rounded font-mono whitespace-pre-wrap break-all inline-block max-w-full leading-relaxed">
                                 {dep.raw}
                               </div>
                             </div>

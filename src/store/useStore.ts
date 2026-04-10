@@ -65,9 +65,9 @@ export interface ProjectData {
 export type ThemeId = 'dark' | 'light' | 'neon' | 'blueprint' | 'pastel' | 'blood' | 'forest' | 'sunset' | 'electric' | 'midnight' | 'matrix' | 'cyber' | 'drift' | 'arctic' | 'desert' | 'lava' | 'void';
 export type LayoutId = 'force' | 'hierarchy' | 'circular' | 'grid' | 'radial';
 export type ShapeId = 'auto' | 'human' | 'jet' | 'cat' | 'tree' | 'star' | 'heart' | 'wave' | 'circle' | 'diamond' | 'honeycomb' | 'pyramid' | 'spiral';
-export type EdgeStyle = 'bezier' | 'straight' | 'step' | 'animated-dots';
+export type EdgeStyle = 'bezier' | 'straight' | 'step' | 'animated-dots' | 'chain';
 export type NodeShape = 'card' | 'pill' | 'hexagon' | 'minimal' | 'circular';
-export type BgPattern = 'dots' | 'lines' | 'cross' | 'solid' | 'hex';
+export type BgPattern = 'dots' | 'lines' | 'cross' | 'solid' | 'hex' | 'none';
 
 interface AppState {
   project: ProjectData | null;
