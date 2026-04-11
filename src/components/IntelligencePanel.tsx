@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { getFileTypeInfo } from '@/lib/fileIcons';
+import { SecurityHubView } from './SecurityIssuePanel';
 import { detectCircularDeps } from '@/lib/projectLoader';
 import { computeComplexity, detectOrphans, detectTestFiles, detectConfigFiles } from '@/lib/analysis';
 import {
@@ -23,7 +24,8 @@ import {
    History,
    ChevronRight,
    ChevronDown,
-   Package
+   Package,
+   ShieldAlert
 } from 'lucide-react';
 
 interface TreeNode {
@@ -43,7 +45,7 @@ interface TreeNode {
 }
 
 export function IntelligencePanel() {
-   const { project, sidebarOpen, openCodeView, setSelectedNode } = useStore();
+   const { project, sidebarOpen, openCodeView, setSelectedNode, intelligenceTab, setIntelligenceTab } = useStore();
    const [activeSections, setActiveSections] = useState<Set<string>>(new Set(['tree']));
    const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['src']));
 
@@ -229,33 +231,49 @@ export function IntelligencePanel() {
    return (
       <div className="h-full bg-background border-r border-border/80 overflow-hidden flex flex-col flex-shrink-0 relative z-40 w-[360px]" style={{ transform: 'translateZ(0)' }}>
 
-         {/* 01: SYSTEM DIAGNOSTICS HEADER */}
-         <div className="p-6 border-b border-border/80 bg-card/40 relative">
-            <div className="absolute top-0 right-0 p-3">
-               <div className="flex flex-col items-end gap-1">
-                  <span className="text-xs font-mono font-black text-success uppercase tracking-widest">System_Healthy</span>
-                  <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
+         {/* 01: ULTRA COMPACT HEADER */}
+         <div className="p-2 px-3 border-b border-border/80 bg-card/40 flex flex-col gap-1 relative">
+            <div className="flex items-center justify-between">
+               <div className="flex items-center gap-2 overflow-hidden">
+                  <span className="text-[10px] font-black uppercase tracking-tight text-foreground truncate shrink">
+                     {project.name.split('/').pop()}
+                  </span>
+                  <div className="px-1 py-0 bg-primary/10 border border-primary/30 rounded-[2px]">
+                     <span className="text-[8px] font-black text-primary uppercase">{project.source}</span>
+                  </div>
+               </div>
+               <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
+                  <span className="text-[8px] font-mono font-black text-success uppercase">Active</span>
                </div>
             </div>
-
-            <div className="flex flex-col gap-1.5">
-               <span className="text-xs font-mono font-black text-primary uppercase tracking-[0.2em]">Nodal_Intelligence</span>
-               <h2 className="text-2xl font-black uppercase tracking-tighter text-foreground truncate">
-                  {project.name.split('/').pop()}
-               </h2>
-               <div className="flex items-center gap-2 mt-3">
-                  <div className="px-2.5 py-1 bg-primary/10 border border-primary/30 rounded-sm">
-                     <span className="text-xs font-black text-primary uppercase tracking-widest">{project.source}::PRO</span>
-                  </div>
-                  <div className="px-2.5 py-1 border border-border rounded-sm">
-                     <span className="text-xs font-black text-foreground/80 uppercase tracking-widest">{project.branch || 'main'}</span>
-                  </div>
-               </div>
+            
+            <div className="flex items-center gap-2">
+               <span className="text-[8px] font-mono font-black text-muted-foreground uppercase opacity-60">Branch::</span>
+               <span className="text-[8px] font-black text-foreground/80 uppercase tracking-widest bg-secondary/20 px-1 rounded-[2px]">{project.branch || 'main'}</span>
             </div>
          </div>
 
-         {/* 02: LIVE TELEMETRY STREAM */}
-         <div className="flex-1 overflow-y-auto scrollbar-thin">
+         {/* 02: ULTRA COMPACT TABS */}
+         <div className="flex bg-secondary/10 border-b border-border/80 shrink-0">
+            <button 
+               onClick={() => setIntelligenceTab('arch')}
+               className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[8.5px] font-black uppercase tracking-[0.1em] transition-all border-r border-border/40 ${intelligenceTab === 'arch' ? 'bg-background text-primary' : 'text-muted-foreground hover:bg-background/40'}`}
+            >
+               <Layers className="w-3 h-3" /> Intelligence
+            </button>
+            <button 
+               onClick={() => setIntelligenceTab('security')}
+               className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[8.5px] font-black uppercase tracking-[0.1em] transition-all ${intelligenceTab === 'security' ? 'bg-background text-primary' : 'text-muted-foreground hover:bg-background/40'}`}
+            >
+               <ShieldAlert className="w-3 h-3" /> Security
+            </button>
+         </div>
+
+         {intelligenceTab === 'arch' ? (
+            <>
+               {/* 03: LIVE TELEMETRY STREAM */}
+               <div className="flex-1 overflow-y-auto scrollbar-thin">
 
             {/* Architecture Assessment Section */}
             <div className="p-6 border-b border-border/80 bg-secondary/5">
@@ -308,6 +326,16 @@ export function IntelligencePanel() {
                         <span className="text-xl leading-none font-black font-mono text-amber-600 dark:text-amber-400">{project.dependencies.length}</span>
                         <span className="text-[11px] text-amber-500/60 font-mono font-black pb-0.5">LINKS</span>
                      </div>
+                  </div>
+
+                  <div className="col-span-2 p-1 pt-2">
+                    <button 
+                      onClick={() => useStore.getState().toggleSecurityPanel()}
+                      className="w-full flex items-center justify-center gap-2.5 py-3 border border-destructive/30 bg-destructive/5 hover:bg-destructive/10 text-destructive text-[11px] font-black uppercase tracking-[0.2em] transition-all group"
+                    >
+                      <ShieldAlert className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                      View Security Fractures
+                    </button>
                   </div>
 
                   <div className="col-span-2 p-3 mt-1 border border-indigo-500/20 rounded-sm bg-indigo-500/10 flex flex-col gap-3">
@@ -437,35 +465,39 @@ export function IntelligencePanel() {
 
          </div>
 
-         {/* 03: SYSTEM FOOTER (TELEMETRY) */}
-         <div className="p-6 border-t border-border/80 bg-card/60">
-            <div className="flex flex-col gap-4">
-               <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                     <FileText className="w-4 h-4 text-muted-foreground/80" />
-                     <span className="text-xs font-mono font-black text-foreground/70 uppercase tracking-widest">Payload_Capacity</span>
-                  </div>
-                  <span className="text-sm font-black text-foreground">{formatSize(totalSize)}</span>
-               </div>
-               <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                     <History className="w-4 h-4 text-muted-foreground/80" />
-                     <span className="text-xs font-mono font-black text-foreground/70 uppercase tracking-widest">Thread_Connectivity</span>
-                  </div>
-                  <span className="text-sm font-black text-foreground">ACTIVE_SYNC</span>
-               </div>
+               {/* 04: SYSTEM FOOTER (TELEMETRY) */}
+               <div className="p-6 border-t border-border/80 bg-card/60">
+                  <div className="flex flex-col gap-4">
+                     <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                           <FileText className="w-4 h-4 text-muted-foreground/80" />
+                           <span className="text-xs font-mono font-black text-foreground/70 uppercase tracking-widest">Payload_Capacity</span>
+                        </div>
+                        <span className="text-sm font-black text-foreground">{formatSize(totalSize)}</span>
+                     </div>
+                     <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                           <History className="w-4 h-4 text-muted-foreground/80" />
+                           <span className="text-xs font-mono font-black text-foreground/70 uppercase tracking-widest">Thread_Connectivity</span>
+                        </div>
+                        <span className="text-sm font-black text-foreground">ACTIVE_SYNC</span>
+                     </div>
 
-               <div className="mt-4 flex items-center justify-between pt-5 border-t border-border/40">
-                  <div className="flex items-center gap-2.5">
-                     <Cpu className="w-5 h-5 text-primary opacity-60 shadow-primary/20" />
-                     <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">Protocol::Static</span>
-                  </div>
-                  <div className="flex gap-1.5">
-                     {[1, 2, 3, 4].map(i => <div key={i} className="w-1.5 h-4 bg-primary/20" />)}
+                     <div className="mt-4 flex items-center justify-between pt-5 border-t border-border/40">
+                        <div className="flex items-center gap-2.5">
+                           <Cpu className="w-5 h-5 text-primary opacity-60 shadow-primary/20" />
+                           <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">Protocol::Static</span>
+                        </div>
+                        <div className="flex gap-1.5">
+                           {[1, 2, 3, 4].map(i => <div key={i} className="w-1.5 h-4 bg-primary/20" />)}
+                        </div>
+                     </div>
                   </div>
                </div>
-            </div>
-         </div>
+            </>
+         ) : (
+            <SecurityHubView />
+         )}
       </div>
    );
 }

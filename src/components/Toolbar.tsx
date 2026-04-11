@@ -8,7 +8,8 @@ import {
   Share2, 
   Monitor, 
   RotateCcw,
-  Sidebar
+  Sidebar,
+  ShieldAlert
 } from 'lucide-react';
 
 const TOOLS = [
@@ -16,6 +17,7 @@ const TOOLS = [
   { icon: Settings2, label: 'Deck Configuration', key: 'customize' },
   { icon: HelpCircle, label: 'Access Guide', key: 'guide' },
   { icon: Sidebar, label: 'Toggle Intelligence', key: 'sidebar' },
+  { icon: ShieldAlert, label: 'Security Hub', key: 'security' },
   { icon: Share2, label: 'Export Protocol (Ctrl+E)', key: 'export' },
   { icon: Monitor, label: 'Presentation Mode (P)', key: 'present' },
   { icon: RotateCcw, label: 'Initialize New Scan', key: 'reset' },
@@ -24,7 +26,7 @@ const TOOLS = [
 export function Toolbar() {
   const {
     toggleSidebar, toggleCustomization, toggleGuide, toggleExport, toggleSearch, togglePresentation,
-    setProject,
+    toggleSecurityPanel, setProject,
   } = useStore();
 
   const actions: Record<string, () => void> = {
@@ -32,6 +34,7 @@ export function Toolbar() {
     customize: toggleCustomization,
     guide: toggleGuide,
     sidebar: toggleSidebar,
+    security: toggleSecurityPanel,
     export: toggleExport,
     present: togglePresentation,
     reset: () => setProject(null),

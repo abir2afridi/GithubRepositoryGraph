@@ -13,6 +13,7 @@ import { SearchPanel } from '@/components/SearchPanel';
 import { OnboardingTour } from '@/components/OnboardingTour';
 import { PresentationMode } from '@/components/PresentationMode';
 import { NodeContextMenu } from '@/components/NodeContextMenu';
+ // Security Hub now integrated into IntelligencePanel
 
 export default function Index() {
   const { project, toggleExport, presentationMode, contextMenu, setContextMenu, theme, 
@@ -51,6 +52,7 @@ export default function Index() {
       <Toolbar />
       <ExportModal />
       <OnboardingTour />
+      {/* Security Hub now integrated into IntelligencePanel */}
       {contextMenu && (
         <NodeContextMenu
           x={contextMenu.x}

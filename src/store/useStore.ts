@@ -95,6 +95,8 @@ interface AppState {
   searchQuery: string;
   searchOpen: boolean;
   repoInfoOpen: boolean;
+  intelligenceTab: 'arch' | 'security';
+  securityPanelOpen: boolean; // Deprecated but kept for compatibility or temporary use
   presentationMode: boolean;
   contextMenu: { x: number; y: number; nodePath: string } | null;
 
@@ -114,18 +116,22 @@ interface AppState {
   setEdgeThickness: (t: number) => void;
   setAnimationSpeed: (s: 'off' | 'slow' | 'medium' | 'fast') => void;
   toggleSidebar: () => void;
-  openCodeView: (filePath: string) => void;
+  openCodeView: (filePath: string, line?: number) => void;
   closeCodeView: () => void;
   navigateCode: (direction: 'back' | 'forward') => void;
   toggleCustomization: () => void;
   toggleGuide: () => void;
   toggleExport: () => void;
   toggleRepoInfo: () => void;
+  setIntelligenceTab: (tab: 'arch' | 'security') => void;
+  toggleSecurityPanel: () => void;
   togglePresentation: () => void;
   setContextMenu: (menu: { x: number; y: number; nodePath: string } | null) => void;
   setSelectedNode: (n: string | null) => void;
   setSearchQuery: (q: string) => void;
   toggleSearch: () => void;
+  highlightedLine: number | null;
+  setHighlightedLine: (line: number | null) => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -154,12 +160,15 @@ export const useStore = create<AppState>((set, get) => ({
   searchQuery: '',
   searchOpen: false,
   repoInfoOpen: false,
+  intelligenceTab: 'arch',
+  securityPanelOpen: false,
   presentationMode: false,
   contextMenu: null,
   codeHistory: [],
   codeHistoryIndex: -1,
+  highlightedLine: null,
 
-  setProject: (p) => set({ project: p, error: null }),
+  setProject: (p) => set({ project: p, error: null, securityPanelOpen: false, highlightedLine: null }),
   setLoading: (loading, message = '', progress = 0) => set({ isLoading: loading, loadingMessage: message, loadingProgress: progress }),
   setError: (error) => set({ error, isLoading: false }),
   setTheme: (theme) => {
@@ -188,27 +197,39 @@ export const useStore = create<AppState>((set, get) => ({
   setEdgeThickness: (edgeThickness) => set({ edgeThickness }),
   setAnimationSpeed: (animationSpeed) => set({ animationSpeed }),
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
-  openCodeView: (filePath) => {
+  openCodeView: (filePath, line) => {
     const state = get();
     const newHistory = state.codeHistory.slice(0, state.codeHistoryIndex + 1);
     newHistory.push(filePath);
-    set({ codeViewOpen: true, codeViewFile: filePath, codeHistory: newHistory, codeHistoryIndex: newHistory.length - 1 });
+    set({ 
+      codeViewOpen: true, 
+      codeViewFile: filePath, 
+      codeHistory: newHistory, 
+      codeHistoryIndex: newHistory.length - 1,
+      highlightedLine: line || null
+    });
   },
-  closeCodeView: () => set({ codeViewOpen: false, codeViewFile: null }),
+  closeCodeView: () => set({ codeViewOpen: false, codeViewFile: null, highlightedLine: null }),
   navigateCode: (direction) => {
     const state = get();
     const newIndex = direction === 'back' ? state.codeHistoryIndex - 1 : state.codeHistoryIndex + 1;
     if (newIndex >= 0 && newIndex < state.codeHistory.length) {
-      set({ codeHistoryIndex: newIndex, codeViewFile: state.codeHistory[newIndex] });
+      set({ codeHistoryIndex: newIndex, codeViewFile: state.codeHistory[newIndex], highlightedLine: null });
     }
   },
   toggleCustomization: () => set((s) => ({ customizationOpen: !s.customizationOpen })),
   toggleGuide: () => set((s) => ({ guideOpen: !s.guideOpen })),
   toggleExport: () => set((s) => ({ exportOpen: !s.exportOpen })),
   toggleRepoInfo: () => set((s) => ({ repoInfoOpen: !s.repoInfoOpen })),
+  setIntelligenceTab: (tab) => set({ intelligenceTab: tab, sidebarOpen: true }),
+  toggleSecurityPanel: () => set((s) => ({ 
+    intelligenceTab: s.intelligenceTab === 'security' && s.sidebarOpen ? 'arch' : 'security',
+    sidebarOpen: true 
+  })),
   togglePresentation: () => set((s) => ({ presentationMode: !s.presentationMode })),
   setContextMenu: (contextMenu) => set({ contextMenu }),
   setSelectedNode: (selectedNode) => set({ selectedNode }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   toggleSearch: () => set((s) => ({ searchOpen: !s.searchOpen })),
+  setHighlightedLine: (highlightedLine) => set({ highlightedLine }),
 }));

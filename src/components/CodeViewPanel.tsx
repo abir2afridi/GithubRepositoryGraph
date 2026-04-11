@@ -29,12 +29,45 @@ const LANG_MAP: Record<string, string> = {
 
 export function CodeViewPanel() {
   const { project, codeViewOpen, codeViewFile, closeCodeView, navigateCode,
-          codeHistory, codeHistoryIndex, openCodeView, theme } = useStore();
+          codeHistory, codeHistoryIndex, openCodeView, theme, highlightedLine, setHighlightedLine } = useStore();
 
   const file = useMemo(() => {
     if (!codeViewOpen || !codeViewFile || !project) return null;
     return project.files.find(f => f.path === codeViewFile) || null;
   }, [codeViewOpen, codeViewFile, project]);
+
+  const editorRef = React.useRef<Parameters<NonNullable<React.ComponentProps<typeof Editor>['onMount']>>[0] | null>(null);
+
+  React.useEffect(() => {
+    if (editorRef.current && highlightedLine) {
+       const editor = editorRef.current;
+       editor.revealLineInCenter(highlightedLine);
+       
+       const decorations = [
+         {
+           range: { 
+             startLineNumber: highlightedLine, 
+             startColumn: 1, 
+             endLineNumber: highlightedLine, 
+             endColumn: 1000 
+           },
+           options: {
+             isWholeLine: true,
+             className: 'security-fracture-line',
+             glyphMarginClassName: 'security-fracture-glyph',
+             linesDecorationsClassName: 'security-fracture-margin',
+             inlineClassName: 'security-fracture-inline'
+           }
+         }
+       ];
+       
+       const collection = editor.createDecorationsCollection(decorations);
+       
+       // Clear highlighting after a few seconds or when file changes if desired
+       // For now keep it until file changes or closeCodeView
+       return () => collection.clear();
+    }
+  }, [highlightedLine, codeViewFile]);
 
   const outgoing = useMemo(() => project?.dependencies.filter(d => d.source === codeViewFile) ?? [], [project, codeViewFile]);
   const incoming = useMemo(() => project?.dependencies.filter(d => d.target === codeViewFile && d.resolved) ?? [], [project, codeViewFile]);
@@ -365,6 +398,7 @@ export function CodeViewPanel() {
               cursorBlinking: 'smooth',
             }}
             onMount={(editor) => {
+              editorRef.current = editor;
               const decorations = outgoing.map(dep => ({
                 range: { startLineNumber: dep.line, startColumn: 1, endLineNumber: dep.line, endColumn: 1 },
                 options: {
